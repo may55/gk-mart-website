@@ -3,8 +3,7 @@ import { useState } from "react";
 import { Bell, MapPin, Search, SlidersHorizontal } from "lucide-react";
 
 import { ProductCard } from "@/components/product-card";
-import { BottomNav } from "@/components/bottom-nav";
-import logo from "@/assets/gk-mart-logo.jpeg.asset.json";
+import logo from "@/assets/gkmart-logo.png";
 
 import basmati from "@/assets/products/basmati.jpg";
 import toordal from "@/assets/products/toordal.jpg";
@@ -64,7 +63,7 @@ function Index() {
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <img
-                src={logo.url}
+                src={logo}
                 alt="GK Mart logo"
                 width={40}
                 height={40}
@@ -147,8 +146,6 @@ function Index() {
           </div>
         </main>
       </div>
-
-      <BottomNav />
     </div>
   );
 }

@@ -6,11 +6,14 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useLocation,
 } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { CartProvider } from "../lib/cart";
+import { AuthProvider } from "../lib/auth-context";
+import { BottomNav } from "../components/bottom-nav";
 
 function NotFoundComponent() {
   return (
@@ -75,9 +78,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "GK Mart — Groceries delivered fresh" },
-      { name: "description", content: "Shop everyday groceries at GK Mart — rice, dal, dairy, and fresh produce — delivered in minutes." },
+      {
+        name: "description",
+        content:
+          "Shop everyday groceries at GK Mart — rice, dal, dairy, and fresh produce — delivered in minutes.",
+      },
       { property: "og:title", content: "GK Mart — Groceries delivered fresh" },
-      { property: "og:description", content: "Shop everyday groceries at GK Mart — rice, dal, dairy, and fresh produce — delivered in minutes." },
+      {
+        property: "og:description",
+        content:
+          "Shop everyday groceries at GK Mart — rice, dal, dairy, and fresh produce — delivered in minutes.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -88,11 +99,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" },
-      { rel: "icon", href: "/favicon.jpg", type: "image/jpeg" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
+      },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
   }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
@@ -114,13 +127,28 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useLocation();
+
+  // Routes where bottom nav should not be shown
+  const hideBottomNavRoutes = ["/login", "/signup"];
+  const shouldHideBottomNav = hideBottomNavRoutes.some((route) =>
+    location.pathname.startsWith(route),
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <div className="flex flex-col min-h-screen">
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <div className="flex-1">
+              <Outlet />
+            </div>
+            {/* Bottom Navigation */}
+            {!shouldHideBottomNav && <BottomNav />}
+          </div>
+        </CartProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

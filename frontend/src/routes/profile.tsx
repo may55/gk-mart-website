@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   ChevronRight,
@@ -11,8 +12,8 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react";
-
-import { BottomNav } from "@/components/bottom-nav";
+import { useAuth } from "@/lib/auth-context";
+import { AuthPromptModal } from "@/components/auth-prompt-modal";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -43,6 +44,40 @@ const preferences = [
 ];
 
 function ProfilePage() {
+  const { isLoggedIn, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  // If not logged in, show auth prompt modal
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-background font-sans text-foreground">
+        <div className="mx-auto flex min-h-screen max-w-md flex-col pb-32">
+          <header className="sticky top-0 z-30 bg-background/95 px-5 pb-4 pt-6 backdrop-blur">
+            <h1 className="text-2xl font-extrabold tracking-tight">Profile</h1>
+          </header>
+          <main className="flex-1 flex items-center justify-center px-5">
+            <AuthPromptModal
+              title="Your Profile"
+              description="Sign in to view your profile, manage addresses, and track preferences"
+            />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Get user initials for avatar
+  const userInitials = user?.name
+    ?.split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase() || "U";
+
+  const handleLogout = async () => {
+    logout();
+    navigate({ to: "/" });
+  };
+
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
       <div className="mx-auto flex min-h-screen max-w-md flex-col pb-32">
@@ -54,12 +89,12 @@ function ProfilePage() {
           {/* User card */}
           <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
             <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-primary text-xl font-extrabold text-primary-foreground shadow-[var(--shadow-float)]">
-              AS
+              {userInitials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-extrabold">Ananya Sharma</p>
+              <p className="truncate text-base font-extrabold">{user?.name}</p>
               <p className="truncate text-xs font-medium text-muted-foreground">
-                ananya.sharma@email.com
+                {user?.email || user?.number}
               </p>
               <p className="mt-1 text-[11px] font-semibold text-primary">
                 GK Gold Member
@@ -141,7 +176,8 @@ function ProfilePage() {
 
           <button
             type="button"
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold text-destructive shadow-[var(--shadow-card)]"
+            onClick={handleLogout}
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold text-destructive shadow-[var(--shadow-card)] hover:bg-destructive/5 transition-colors"
           >
             <LogOut className="h-4 w-4" strokeWidth={2.25} />
             Log out
@@ -152,7 +188,6 @@ function ProfilePage() {
           </p>
         </main>
       </div>
-      <BottomNav />
     </div>
   );
 }

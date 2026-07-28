@@ -1,0 +1,14 @@
+{
+  "name": "gkmart",
+  "version": "1.0.0",
+  "description": "GK Mart - Grocery delivery platform",
+  "scripts": {
+    "dev": "./dev.sh",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev"
+  },
+  "private": true,
+  "keywords": ["gkmart", "grocery", "delivery"],
+  "author": "",
+  "license": "ISC"
+}

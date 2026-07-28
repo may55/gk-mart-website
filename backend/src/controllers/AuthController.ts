@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import AuthService from '../services/AuthService.js';
-import { validateSignup, validateLogin } from '../validators/auth.js';
+import AuthService from '../services/AuthService';
+import { validateSignup, validateLogin } from '../validators/auth';
 
 interface CustomRequest extends Request {
   userId?: string;

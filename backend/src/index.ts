@@ -1,9 +1,9 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectDB, disconnectDB } from './config/database.js';
-import authRouter from './routes/auth.js';
-import errorHandler from './middleware/errorHandler.js';
+import { connectDB, disconnectDB } from './config/database';
+import authRouter from './routes/auth';
+import errorHandler from './middleware/errorHandler';
 
 dotenv.config();
 

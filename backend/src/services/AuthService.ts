@@ -1,7 +1,7 @@
-import UserRepository from '../repositories/UserRepository.js';
-import { hashPassword, comparePassword } from '../lib/password.js';
-import { generateToken } from '../lib/jwt.js';
-import { IUser } from '../models/User.js';
+import UserRepository from '../repositories/UserRepository';
+import { hashPassword, comparePassword } from '../lib/password';
+import { generateToken } from '../lib/jwt';
+import { IUser } from '../models/User';
 
 interface SignupData {
   name: string;

@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Clock, Package, RefreshCw } from "lucide-react";
-
-import { BottomNav } from "@/components/bottom-nav";
+import { useAuth } from "@/lib/auth-context";
+import { AuthPromptModal } from "@/components/auth-prompt-modal";
 
 export const Route = createFileRoute("/orders")({
   head: () => ({
     meta: [
       { title: "My Orders — GK Mart" },
-      { name: "description", content: "Track your ongoing grocery deliveries and view past orders from GK Mart." },
+      {
+        name: "description",
+        content: "Track your ongoing grocery deliveries and view past orders from GK Mart.",
+      },
       { property: "og:title", content: "My Orders — GK Mart" },
       { property: "og:description", content: "Track ongoing and past grocery orders on GK Mart." },
       { property: "og:type", content: "website" },
@@ -35,6 +38,30 @@ const past = [
 ];
 
 function OrdersPage() {
+  const { isLoggedIn } = useAuth();
+
+  // If not logged in, show auth prompt modal
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-background font-sans text-foreground">
+        <div className="mx-auto flex min-h-screen max-w-md flex-col pb-32">
+          <header className="sticky top-0 z-30 bg-background/95 px-5 pb-4 pt-6 backdrop-blur">
+            <h1 className="text-2xl font-extrabold tracking-tight">My Orders</h1>
+            <p className="mt-1 text-xs font-medium text-muted-foreground">
+              Track deliveries and reorder favourites
+            </p>
+          </header>
+          <main className="flex-1 flex items-center justify-center px-5">
+            <AuthPromptModal
+              title="Track Your Orders"
+              description="Sign in to view your order history and track ongoing deliveries"
+            />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
       <div className="mx-auto flex min-h-screen max-w-md flex-col pb-32">
@@ -108,7 +135,6 @@ function OrdersPage() {
           </div>
         </main>
       </div>
-      <BottomNav />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import User, { IUser } from '../models/User.js';
+import User, { IUser } from '../models/User';
 
 class UserRepository {
   async createUser(userData: Partial<IUser>): Promise<IUser> {

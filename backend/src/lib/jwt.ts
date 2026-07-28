@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-interface TokenPayload {
+export interface TokenPayload {
   userId: string;
   email: string;
   iat?: number;
@@ -29,4 +29,4 @@ const verifyToken = (token: string): TokenPayload | null => {
   }
 };
 
-export { generateToken, verifyToken, TokenPayload };
+export { generateToken, verifyToken };
