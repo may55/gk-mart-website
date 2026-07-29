@@ -9,10 +9,13 @@ import adminInventoryRouter from './routes/admin/inventory';
 import adminOrdersRouter from './routes/admin/orders';
 import adminAccountsRouter from './routes/admin/accounts';
 import adminUsersRouter from './routes/admin/users';import adminCategoriesRouter from './routes/admin/categories';
+import adminNotificationsRouter from './routes/admin/notifications';
 import publicRouter from './routes/public';
 import cartRouter from './routes/cart';
 import addressRouter from './routes/addresses';
-import ordersRouter from './routes/orders';import errorHandler from './middleware/errorHandler';
+import ordersRouter from './routes/orders';
+import notificationsRouter from './routes/notifications';
+import errorHandler from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -68,6 +71,12 @@ app.use('/api/orders', ordersRouter);
 
 // Admin categories
 app.use('/api/admin/categories', adminCategoriesRouter);
+
+// Admin notifications
+app.use('/api/admin/notifications', adminNotificationsRouter);
+
+// User notifications
+app.use('/api/notifications', notificationsRouter);
 
 // 404 handler
 app.use((req, res) => {

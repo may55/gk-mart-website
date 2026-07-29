@@ -51,3 +51,16 @@ export interface Order {
   userAddress: Address;
   createdAt: string;
 }
+
+export interface Notification {
+  _id: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserNotification {
+  notificationId: Notification;
+  read: boolean;
+  receivedAt: string;
+}

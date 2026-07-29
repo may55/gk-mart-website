@@ -1,11 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { Bell, MapPin, Search, Loader2 } from "lucide-react";
 
 import { ProductCard } from "@/components/product-card";
 import logo from "@/assets/gkmart-logo.png";
-import type { Product, Category } from "@/lib/types";
+import type { Product, Category, UserNotification } from "@/lib/types";
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,7 +35,10 @@ function Index() {
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { isLoggedIn, token } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch categories once
   useEffect(() => {
@@ -42,6 +46,17 @@ function Index() {
       .then((res) => setCategories(res.data))
       .catch(() => {});
   }, []);
+
+  // Fetch unread notification count when logged in
+  useEffect(() => {
+    if (!isLoggedIn || !token) {
+      setUnreadCount(0);
+      return;
+    }
+    apiFetch<{ data: UserNotification[] }>("/notifications", {}, token)
+      .then((res) => setUnreadCount(res.data.filter((n) => !n.read).length))
+      .catch(() => {});
+  }, [isLoggedIn, token]);
 
   // Fetch products whenever search or category changes (debounced)
   useEffect(() => {
@@ -90,10 +105,15 @@ function Index() {
             <button
               type="button"
               aria-label="Notifications"
+              onClick={() => navigate({ to: "/notifications" })}
               className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card text-foreground shadow-[var(--shadow-card)]"
             >
               <Bell className="h-5 w-5" strokeWidth={2} />
-              <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary" />
+              {unreadCount > 0 && (
+                <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
           </div>
 

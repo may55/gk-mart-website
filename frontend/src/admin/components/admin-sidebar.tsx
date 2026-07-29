@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   Wallet,
   Boxes,
+  Bell,
   LogOut,
 } from "lucide-react";
 import { useAdminAuth } from "../lib/admin-auth-context";
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { label: "Manage Orders", icon: ShoppingCart, to: "/admin/orders" },
   { label: "Accounts", icon: Wallet, to: "/admin/accounts" },
   { label: "Inventory", icon: Boxes, to: "/admin/inventory" },
+  { label: "Notifications", icon: Bell, to: "/admin/notifications" },
 ] as const;
 
 export function AdminSidebar() {

@@ -27,7 +27,11 @@ export const Route = createFileRoute("/orders")({
 const ONGOING_STATUSES = new Set(["pending", "processing", "shipped"]);
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function statusLabel(s: string) {
@@ -79,7 +83,7 @@ function OrdersPage() {
 
   // ── Order detail screen ───────────────────────────────────────────────────
   if (selected) {
-    const addr = selected.userAddress;
+    const addr = selected.userAddress ?? null;
     const isOngoing = ONGOING_STATUSES.has(selected.deliveryStatus);
     return (
       <div className="min-h-screen bg-background font-sans text-foreground">
@@ -95,15 +99,17 @@ function OrdersPage() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h1 className="text-xl font-extrabold tracking-tight">{selected.invoiceId}</h1>
-                <p className="mt-0.5 text-xs text-muted-foreground">{formatDate(selected.createdAt)}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {formatDate(selected.createdAt)}
+                </p>
               </div>
               <span
                 className={`mt-1 rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${
                   isOngoing
                     ? "bg-primary/10 text-primary"
                     : selected.deliveryStatus === "cancelled"
-                    ? "bg-red-100 text-red-600 dark:bg-red-950/40"
-                    : "bg-green-100 text-green-700 dark:bg-green-950/40"
+                      ? "bg-red-100 text-red-600 dark:bg-red-950/40"
+                      : "bg-green-100 text-green-700 dark:bg-green-950/40"
                 }`}
               >
                 {selected.deliveryStatus}
@@ -137,9 +143,13 @@ function OrdersPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold">{formatPrice(item.sellingPrice * item.unit)}</p>
+                        <p className="text-sm font-bold">
+                          {formatPrice(item.sellingPrice * item.unit)}
+                        </p>
                         {savings > 0 && (
-                          <p className="text-[10px] font-medium text-green-600">-{formatPrice(savings)}</p>
+                          <p className="text-[10px] font-medium text-green-600">
+                            -{formatPrice(savings)}
+                          </p>
                         )}
                       </div>
                     </li>
@@ -165,7 +175,9 @@ function OrdersPage() {
                     {savedTotal > 0 && (
                       <div className="flex justify-between py-0.5 text-sm">
                         <span className="font-semibold text-green-600">Discount</span>
-                        <span className="font-semibold text-green-600">-{formatPrice(savedTotal)}</span>
+                        <span className="font-semibold text-green-600">
+                          -{formatPrice(savedTotal)}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between py-0.5 text-sm">
@@ -175,7 +187,9 @@ function OrdersPage() {
                     <div className="my-2 h-px bg-border" />
                     <div className="flex justify-between text-sm">
                       <span className="font-bold">Total paid</span>
-                      <span className="text-base font-extrabold">{formatPrice(selected.totalAmount)}</span>
+                      <span className="text-base font-extrabold">
+                        {formatPrice(selected.totalAmount)}
+                      </span>
                     </div>
                   </>
                 );
@@ -190,20 +204,32 @@ function OrdersPage() {
                   Delivery address
                 </p>
               </div>
-              {addr.label && (
-                <p className="mb-0.5 text-xs font-bold uppercase tracking-wider text-primary">{addr.label}</p>
+              {addr?.line1 ? (
+                <>
+                  {addr.label && (
+                    <p className="mb-0.5 text-xs font-bold uppercase tracking-wider text-primary">
+                      {addr.label}
+                    </p>
+                  )}
+                  <p className="text-sm font-semibold">{addr.line1}</p>
+                  {addr.line2 && <p className="text-xs text-muted-foreground">{addr.line2}</p>}
+                  <p className="text-xs text-muted-foreground">
+                    {addr.city}, {addr.state} — {addr.pincode}
+                  </p>
+                  {addr.phone && (
+                    <p className="mt-1 text-xs text-muted-foreground">Phone: {addr.phone}</p>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No address on record</p>
               )}
-              <p className="text-sm font-semibold">{addr.line1}</p>
-              {addr.line2 && <p className="text-xs text-muted-foreground">{addr.line2}</p>}
-              <p className="text-xs text-muted-foreground">
-                {addr.city}, {addr.state} — {addr.pincode}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">Phone: {addr.phone}</p>
             </div>
 
             {/* Payment */}
             <div className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
-              <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment</p>
+              <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Payment
+              </p>
               <p className="text-sm font-semibold">{selected.paymentMethod}</p>
             </div>
           </main>
@@ -270,9 +296,16 @@ function OrdersPage() {
                         {statusLabel(o.deliveryStatus)}
                       </span>
                     </div>
+                    {o.userAddress?.line1 && (
+                      <p className="mt-2 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        {o.userAddress.line1}, {o.userAddress.city}
+                      </p>
+                    )}
                     <div className="mt-3 flex items-center justify-between text-xs">
                       <span className="font-medium text-muted-foreground">
-                        {o.items.length} item{o.items.length !== 1 ? "s" : ""} · {formatPrice(o.totalAmount)}
+                        {o.items.length} item{o.items.length !== 1 ? "s" : ""} ·{" "}
+                        {formatPrice(o.totalAmount)}
                       </span>
                       <span className="text-[11px] text-muted-foreground">{o.paymentMethod}</span>
                     </div>
@@ -284,7 +317,9 @@ function OrdersPage() {
 
           {!loading && pastOrders.length > 0 && (
             <>
-              <h2 className={`mb-3 text-sm font-bold tracking-tight${ongoingOrders.length > 0 ? " mt-6" : ""}`}>
+              <h2
+                className={`mb-3 text-sm font-bold tracking-tight${ongoingOrders.length > 0 ? " mt-6" : ""}`}
+              >
                 Past orders
               </h2>
               <div className="space-y-3">
@@ -301,8 +336,15 @@ function OrdersPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold">{o.invoiceId}</p>
                       <p className="text-[11px] font-medium text-muted-foreground">
-                        {formatDate(o.createdAt)} · {o.items.length} item{o.items.length !== 1 ? "s" : ""} · {formatPrice(o.totalAmount)}
+                        {formatDate(o.createdAt)} · {o.items.length} item
+                        {o.items.length !== 1 ? "s" : ""} · {formatPrice(o.totalAmount)}
                       </p>
+                      {o.userAddress?.line1 && (
+                        <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {o.userAddress.line1}, {o.userAddress.city}
+                        </p>
+                      )}
                     </div>
                     <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground capitalize">
                       {o.deliveryStatus}

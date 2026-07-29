@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
 export interface IAddress {
   label: string;
@@ -10,6 +10,12 @@ export interface IAddress {
   phone: string;
 }
 
+export interface IUserNotification {
+  notificationId: Types.ObjectId;
+  read: boolean;
+  receivedAt: Date;
+}
+
 export interface IUser extends Document {
   name: string;
   email: string;
@@ -18,6 +24,7 @@ export interface IUser extends Document {
   addresses: IAddress[];
   userRole: 'admin' | 'customer';
   cart: { productEnum: string; quantity: number }[];
+  notifications: IUserNotification[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -71,6 +78,17 @@ const UserSchema = new Schema<IUser>(
         {
           productEnum: { type: String, required: true },
           quantity: { type: Number, required: true, min: 1 },
+          _id: false,
+        },
+      ],
+      default: [],
+    },
+    notifications: {
+      type: [
+        {
+          notificationId: { type: Schema.Types.ObjectId, ref: 'Notification', required: true },
+          read: { type: Boolean, default: false },
+          receivedAt: { type: Date, default: Date.now },
           _id: false,
         },
       ],

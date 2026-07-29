@@ -205,6 +205,9 @@ function ProfilePage() {
               <button
                 key={item.label}
                 type="button"
+                onClick={() => {
+                  if (item.label === "Notifications") navigate({ to: "/notifications" });
+                }}
                 className={`flex w-full items-center gap-3 px-4 py-3 text-left ${
                   i > 0 ? "border-t border-border" : ""
                 }`}

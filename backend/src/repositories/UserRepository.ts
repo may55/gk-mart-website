@@ -1,4 +1,5 @@
 import User, { IUser } from '../models/User';
+import { Types } from 'mongoose';
 
 class UserRepository {
   async createUser(userData: Partial<IUser>): Promise<IUser> {
@@ -50,6 +51,32 @@ class UserRepository {
 
   async findAll(): Promise<IUser[]> {
     return await User.find().sort({ createdAt: -1 });
+  }
+
+  async pushNotificationToAllUsers(notificationId: Types.ObjectId): Promise<void> {
+    await User.updateMany(
+      {},
+      {
+        $push: {
+          notifications: {
+            notificationId,
+            read: false,
+            receivedAt: new Date(),
+          },
+        },
+      }
+    );
+  }
+
+  async getUserNotifications(userId: string): Promise<IUser | null> {
+    return await User.findById(userId).populate('notifications.notificationId');
+  }
+
+  async markNotificationRead(userId: string, notificationId: string): Promise<void> {
+    await User.updateOne(
+      { _id: userId, 'notifications.notificationId': new Types.ObjectId(notificationId) },
+      { $set: { 'notifications.$.read': true } }
+    );
   }
 }
 
