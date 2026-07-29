@@ -1,28 +1,44 @@
 import { Home, LayoutGrid, Receipt, User, ShoppingCart } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useCart } from "@/lib/cart";
+import { useAuth } from "@/lib/auth-context";
 
-const items = [
+const navItems = [
   { icon: Home, label: "Home", to: "/" as const },
   { icon: LayoutGrid, label: "Categories", to: "/categories" as const },
   { icon: Receipt, label: "Orders", to: "/orders" as const },
-  { icon: User, label: "Profile", to: "/profile" as const },
 ];
 
 export function BottomNav({ cartCount }: { cartCount?: number } = {}) {
   const { count } = useCart();
+  const { user } = useAuth();
   const badge = cartCount ?? count;
+  const initial = user?.name?.trim()[0]?.toUpperCase() ?? null;
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center">
       <div className="pointer-events-auto relative mx-auto w-full max-w-md px-4 pb-4">
         <nav className="relative flex items-center justify-around rounded-2xl border border-border bg-background/95 px-2 py-3 shadow-[var(--shadow-soft)] backdrop-blur">
-          {items.slice(0, 2).map((item) => (
+          {navItems.slice(0, 2).map((item) => (
             <NavItem key={item.label} {...item} />
           ))}
           <div className="h-10 w-14" aria-hidden />
-          {items.slice(2).map((item) => (
+          {navItems.slice(2).map((item) => (
             <NavItem key={item.label} {...item} />
           ))}
+          <Link
+            to="/profile"
+            activeOptions={{ exact: true }}
+            className="group flex flex-col items-center gap-1 px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground data-[status=active]:text-primary"
+          >
+            {initial ? (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground group-data-[status=active]:ring-2 group-data-[status=active]:ring-primary group-data-[status=active]:ring-offset-1">
+                {initial}
+              </span>
+            ) : (
+              <User className="h-5 w-5 group-data-[status=active]:[stroke-width:2.5]" strokeWidth={2} />
+            )}
+            <span>Profile</span>
+          </Link>
 
           <Link
             to="/cart"
@@ -49,7 +65,7 @@ function NavItem({
 }: {
   icon: typeof Home;
   label: string;
-  to: "/" | "/categories" | "/orders" | "/profile";
+  to: "/" | "/categories" | "/orders";
 }) {
   return (
     <Link

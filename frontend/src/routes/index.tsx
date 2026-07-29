@@ -1,16 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Bell, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Bell, MapPin, Search, Loader2 } from "lucide-react";
 
 import { ProductCard } from "@/components/product-card";
 import logo from "@/assets/gkmart-logo.png";
-
-import basmati from "@/assets/products/basmati.jpg";
-import toordal from "@/assets/products/toordal.jpg";
-import tomatoes from "@/assets/products/tomatoes.jpg";
-import milk from "@/assets/products/milk.jpg";
-import mangoes from "@/assets/products/mangoes.jpg";
-import atta from "@/assets/products/atta.jpg";
+import type { Product, Category } from "@/lib/types";
+import { apiFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,27 +28,42 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const categories = [
-  { label: "All", emoji: "🛒" },
-  { label: "Fruits", emoji: "🍎" },
-  { label: "Vegetables", emoji: "🥬" },
-  { label: "Rice & Dal", emoji: "🌾" },
-  { label: "Dairy", emoji: "🥛" },
-  { label: "Snacks", emoji: "🍪" },
-  { label: "Beverages", emoji: "🧃" },
-];
-
-const products = [
-  { id: "basmati", name: "Basmati Rice", unit: "5 kg pack", price: 599, image: basmati },
-  { id: "toordal", name: "Toor Dal", unit: "1 kg pouch", price: 149, image: toordal },
-  { id: "tomatoes", name: "Fresh Tomatoes", unit: "1 kg", price: 49, image: tomatoes },
-  { id: "milk", name: "Full Cream Milk", unit: "1 L carton", price: 72, image: milk },
-  { id: "mangoes", name: "Alphonso Mangoes", unit: "1 dozen", price: 499, image: mangoes },
-  { id: "atta", name: "Whole Wheat Atta", unit: "5 kg bag", price: 279, image: atta },
-];
-
 function Index() {
-  const [active, setActive] = useState("Rice & Dal");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [search, setSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch categories once
+  useEffect(() => {
+    apiFetch<{ data: Category[] }>("/categories")
+      .then((res) => setCategories(res.data))
+      .catch(() => {});
+  }, []);
+
+  // Fetch products whenever search or category changes (debounced)
+  useEffect(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      setIsLoading(true);
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("q", search.trim());
+      if (activeCategory !== "All") params.set("category", activeCategory);
+      const qs = params.toString();
+      apiFetch<{ data: Product[] }>(`/products${qs ? `?${qs}` : ""}`)
+        .then((res) => setProducts(res.data))
+        .catch(() => setProducts([]))
+        .finally(() => setIsLoading(false));
+    }, 300);
+
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, [search, activeCategory]);
+
+  const allCategories = [{ label: "All", image: "" }, ...categories];
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
@@ -70,9 +80,7 @@ function Index() {
                 className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-[var(--shadow-card)]"
               />
               <div className="min-w-0 leading-tight">
-                <p className="truncate text-base font-extrabold tracking-tight">
-                  GK Mart
-                </p>
+                <p className="truncate text-base font-extrabold tracking-tight">GK Mart</p>
                 <p className="flex min-w-0 items-center gap-1 text-[11px] font-medium text-muted-foreground">
                   <MapPin className="h-3 w-3 shrink-0" strokeWidth={2.5} />
                   <span className="truncate">Home · 12 min</span>
@@ -84,7 +92,7 @@ function Index() {
               aria-label="Notifications"
               className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card text-foreground shadow-[var(--shadow-card)]"
             >
-              <Bell className="h-4.5 w-4.5 h-5 w-5" strokeWidth={2} />
+              <Bell className="h-5 w-5" strokeWidth={2} />
               <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary" />
             </button>
           </div>
@@ -94,34 +102,32 @@ function Index() {
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2.25} />
             <input
               type="text"
-              placeholder="Search basmati rice..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search products..."
               className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
-            <button
-              type="button"
-              aria-label="Filters"
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </button>
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
 
-          {/* Category bubbles */}
+          {/* Category pills */}
           <div className="mt-4 -mx-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="flex gap-2">
-              {categories.map((cat) => {
-                const isActive = cat.label === active;
+              {allCategories.map((cat) => {
+                const isActive = cat.label === activeCategory;
                 return (
                   <button
                     key={cat.label}
-                    onClick={() => setActive(cat.label)}
+                    onClick={() => setActiveCategory(cat.label)}
                     className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                       isActive
                         ? "bg-primary text-primary-foreground shadow-[0_6px_14px_rgba(46,204,113,0.3)]"
                         : "bg-card text-foreground hover:bg-muted"
                     }`}
                   >
-                    <span className="text-sm leading-none">{cat.emoji}</span>
+                    {cat.image ? (
+                      <img src={cat.image} alt="" className="h-4 w-4 rounded-full object-cover" />
+                    ) : null}
                     <span>{cat.label}</span>
                   </button>
                 );
@@ -133,19 +139,33 @@ function Index() {
         {/* Product grid */}
         <main className="flex-1 px-5 pt-4">
           <div className="mb-3 flex items-center justify-between">
-            <h1 className="text-lg font-bold tracking-tight">Popular now</h1>
-            <button type="button" className="text-xs font-semibold text-primary">
-              See all
-            </button>
+            <h1 className="text-lg font-bold tracking-tight">
+              {activeCategory === "All" ? "All products" : activeCategory}
+            </h1>
+            <span className="text-xs text-muted-foreground">{products.length} items</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {products.map((p) => (
-              <ProductCard key={p.name} product={p} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : products.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-20 text-center">
+              <p className="text-sm font-semibold text-foreground">No products found</p>
+              <p className="text-xs text-muted-foreground">
+                Try a different search or category
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {products.map((p) => (
+                <ProductCard key={p.enum} product={p} />
+              ))}
+            </div>
+          )}
         </main>
       </div>
     </div>
   );
 }
+

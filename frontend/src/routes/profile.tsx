@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -14,6 +15,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthPromptModal } from "@/components/auth-prompt-modal";
+import { AddressManager } from "@/components/address-manager";
+import { apiFetch } from "@/lib/api";
+import type { Address } from "@/lib/types";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -30,7 +34,6 @@ export const Route = createFileRoute("/profile")({
 });
 
 const account = [
-  { icon: MapPin, label: "Delivery addresses", meta: "3 saved" },
   { icon: CreditCard, label: "Payment methods", meta: "UPI, 2 cards" },
   { icon: Heart, label: "Wishlist", meta: "12 items" },
   { icon: Gift, label: "Rewards & offers", meta: "₹250 credit" },
@@ -44,8 +47,32 @@ const preferences = [
 ];
 
 function ProfilePage() {
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user, token, logout } = useAuth();
   const navigate = useNavigate();
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addrLoading, setAddrLoading] = useState(false);
+  const [showAddresses, setShowAddresses] = useState(false);
+
+  useEffect(() => {
+    if (!isLoggedIn || !token) return;
+    setAddrLoading(true);
+    apiFetch<{ data: Address[] }>("/user/addresses", {}, token)
+      .then((r) => setAddresses(r.data))
+      .catch(() => {})
+      .finally(() => setAddrLoading(false));
+  }, [isLoggedIn, token]);
+
+  if (showAddresses) {
+    return (
+      <AddressManager
+        addresses={addresses}
+        addrLoading={addrLoading}
+        token={token}
+        onAddressesChange={setAddresses}
+        onBack={() => setShowAddresses(false)}
+      />
+    );
+  }
 
   // If not logged in, show auth prompt modal
   if (!isLoggedIn) {
@@ -59,6 +86,7 @@ function ProfilePage() {
             <AuthPromptModal
               title="Your Profile"
               description="Sign in to view your profile, manage addresses, and track preferences"
+              onClose={() => navigate({ to: "/" })}
             />
           </main>
         </div>
@@ -109,9 +137,8 @@ function ProfilePage() {
           </div>
 
           {/* Quick stats */}
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="mt-4 grid grid-cols-2 gap-3">
             {[
-              { label: "Orders", value: "42" },
               { label: "Wishlist", value: "12" },
               { label: "Credits", value: "₹250" },
             ].map((s) => (
@@ -126,6 +153,25 @@ function ProfilePage() {
               </div>
             ))}
           </div>
+
+          {/* Delivery addresses */}
+          <h2 className="mt-6 mb-3 text-sm font-bold tracking-tight">Delivery addresses</h2>
+          <button
+            type="button"
+            onClick={() => setShowAddresses(true)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[var(--shadow-card)] text-left"
+          >
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+              <MapPin className="h-4 w-4" strokeWidth={2.25} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">Delivery addresses</p>
+              <p className="truncate text-[11px] font-medium text-muted-foreground">
+                {addrLoading ? "Loading…" : addresses.length === 0 ? "No saved addresses" : `${addresses.length} saved`}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
 
           {/* Account */}
           <h2 className="mt-6 mb-3 text-sm font-bold tracking-tight">Account</h2>

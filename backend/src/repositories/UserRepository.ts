@@ -47,6 +47,10 @@ class UserRepository {
     const result = await User.findByIdAndDelete(id);
     return result !== null;
   }
+
+  async findAll(): Promise<IUser[]> {
+    return await User.find().sort({ createdAt: -1 });
+  }
 }
 
 export default new UserRepository();

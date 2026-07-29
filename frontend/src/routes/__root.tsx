@@ -13,6 +13,7 @@ import { type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { CartProvider } from "../lib/cart";
 import { AuthProvider } from "../lib/auth-context";
+import { AdminAuthProvider } from "../admin/lib/admin-auth-context";
 import { BottomNav } from "../components/bottom-nav";
 
 function NotFoundComponent() {
@@ -130,13 +131,14 @@ function RootComponent() {
   const location = useLocation();
 
   // Routes where bottom nav should not be shown
-  const hideBottomNavRoutes = ["/login", "/signup"];
+  const hideBottomNavRoutes = ["/login", "/signup", "/admin"];
   const shouldHideBottomNav = hideBottomNavRoutes.some((route) =>
     location.pathname.startsWith(route),
   );
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AdminAuthProvider>
       <AuthProvider>
         <CartProvider>
           <div className="flex flex-col min-h-screen">
@@ -149,6 +151,7 @@ function RootComponent() {
           </div>
         </CartProvider>
       </AuthProvider>
+      </AdminAuthProvider>
     </QueryClientProvider>
   );
 }

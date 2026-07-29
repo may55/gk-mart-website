@@ -3,7 +3,16 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB, disconnectDB } from './config/database';
 import authRouter from './routes/auth';
-import errorHandler from './middleware/errorHandler';
+import adminAuthRouter from './routes/admin/auth';
+import adminProductsRouter from './routes/admin/products';
+import adminInventoryRouter from './routes/admin/inventory';
+import adminOrdersRouter from './routes/admin/orders';
+import adminAccountsRouter from './routes/admin/accounts';
+import adminUsersRouter from './routes/admin/users';import adminCategoriesRouter from './routes/admin/categories';
+import publicRouter from './routes/public';
+import cartRouter from './routes/cart';
+import addressRouter from './routes/addresses';
+import ordersRouter from './routes/orders';import errorHandler from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -11,10 +20,18 @@ const app: Express = express();
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+const allowedOrigins = [FRONTEND_URL];
+
 // Middleware
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
@@ -32,6 +49,25 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRouter);
+
+// Admin routes
+app.use('/api/admin/auth', adminAuthRouter);
+app.use('/api/admin/products', adminProductsRouter);
+app.use('/api/admin/inventory', adminInventoryRouter);
+app.use('/api/admin/orders', adminOrdersRouter);
+app.use('/api/admin/accounts', adminAccountsRouter);
+app.use('/api/admin/users', adminUsersRouter);
+
+// Public routes (no auth)
+app.use('/api', publicRouter);
+
+// Authenticated user routes
+app.use('/api/cart', cartRouter);
+app.use('/api/user/addresses', addressRouter);
+app.use('/api/orders', ordersRouter);
+
+// Admin categories
+app.use('/api/admin/categories', adminCategoriesRouter);
 
 // 404 handler
 app.use((req, res) => {

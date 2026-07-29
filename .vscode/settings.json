@@ -1,0 +1,7 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "mkdir": true,
+        "timeout": true,
+        "true": true
+    }
+}

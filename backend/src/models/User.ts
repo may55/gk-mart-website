@@ -1,10 +1,23 @@
 import { Schema, model, Document } from 'mongoose';
 
+export interface IAddress {
+  label: string;
+  line1: string;
+  line2: string;
+  pincode: string;
+  city: string;
+  state: string;
+  phone: string;
+}
+
 export interface IUser extends Document {
   name: string;
   email: string;
   number: string;
   password: string;
+  addresses: IAddress[];
+  userRole: 'admin' | 'customer';
+  cart: { productEnum: string; quantity: number }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,7 +48,33 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
-      select: false, // Don't include password by default in queries
+      select: false,
+    },
+    addresses: [
+      {
+        label: { type: String, default: '' },
+        line1: { type: String, default: '' },
+        line2: { type: String, default: '' },
+        pincode: { type: String, default: '' },
+        city: { type: String, default: '' },
+        state: { type: String, default: '' },
+        phone: { type: String, default: '' },
+      },
+    ],
+    userRole: {
+      type: String,
+      enum: ['admin', 'customer'],
+      default: 'customer',
+    },
+    cart: {
+      type: [
+        {
+          productEnum: { type: String, required: true },
+          quantity: { type: Number, required: true, min: 1 },
+          _id: false,
+        },
+      ],
+      default: [],
     },
   },
   { timestamps: true }

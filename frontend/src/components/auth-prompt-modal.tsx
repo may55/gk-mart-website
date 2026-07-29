@@ -1,15 +1,25 @@
 import { Link } from "@tanstack/react-router";
-import { LogIn } from "lucide-react";
+import { LogIn, X } from "lucide-react";
 
 interface AuthPromptModalProps {
   title: string;
   description: string;
+  onClose?: () => void;
 }
 
-export function AuthPromptModal({ title, description }: AuthPromptModalProps) {
+export function AuthPromptModal({ title, description, onClose }: AuthPromptModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="mx-4 w-full max-w-sm rounded-xl bg-background shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative mx-4 w-full max-w-sm rounded-xl bg-background shadow-lg" onClick={(e) => e.stopPropagation()}>
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
         {/* Content */}
         <div className="p-6 text-center">
           <div className="mb-4 flex justify-center">

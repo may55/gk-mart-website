@@ -1,35 +1,38 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ChevronRight, Search } from "lucide-react";
-
-import { BottomNav } from "@/components/bottom-nav";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Search, Loader2 } from "lucide-react";
+import type { Category } from "@/lib/types";
+import { apiFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
       { title: "Categories — GK Mart" },
-      { name: "description", content: "Browse groceries by category on GK Mart — fruits, vegetables, dairy, staples and more." },
+      { name: "description", content: "Browse groceries by category on GK Mart." },
       { property: "og:title", content: "Categories — GK Mart" },
-      { property: "og:description", content: "Shop groceries by category at GK Mart." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: CategoriesPage,
 });
 
-const categories = [
-  { label: "Fruits", emoji: "🍎", items: 84, tint: "bg-[#FDECEC]" },
-  { label: "Vegetables", emoji: "🥬", items: 96, tint: "bg-[#E8F7EE]" },
-  { label: "Rice & Dal", emoji: "🌾", items: 42, tint: "bg-[#FFF6E0]" },
-  { label: "Dairy", emoji: "🥛", items: 58, tint: "bg-[#EAF2FB]" },
-  { label: "Snacks", emoji: "🍪", items: 120, tint: "bg-[#FBEFE2]" },
-  { label: "Beverages", emoji: "🧃", items: 72, tint: "bg-[#EEEAFB]" },
-  { label: "Bakery", emoji: "🍞", items: 34, tint: "bg-[#FBF3E4]" },
-  { label: "Personal Care", emoji: "🧴", items: 65, tint: "bg-[#E6F5F4]" },
-  { label: "Household", emoji: "🧺", items: 48, tint: "bg-[#F1F0EA]" },
-];
-
 function CategoriesPage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filterText, setFilterText] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    apiFetch<{ data: Category[] }>("/categories")
+      .then((res) => setCategories(res.data))
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const filtered = categories.filter((c) =>
+    c.label.toLowerCase().includes(filterText.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
       <div className="mx-auto flex min-h-screen max-w-md flex-col pb-32">
@@ -42,6 +45,8 @@ function CategoriesPage() {
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2.25} />
             <input
               type="text"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
               placeholder="Search categories..."
               className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
@@ -49,52 +54,43 @@ function CategoriesPage() {
         </header>
 
         <main className="flex-1 px-5 pt-4">
-          <div className="grid grid-cols-3 gap-3">
-            {categories.map((c) => (
-              <button
-                key={c.label}
-                type="button"
-                className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 text-center shadow-[var(--shadow-card)] transition-transform active:scale-[0.97]"
-              >
-                <span className={`grid h-14 w-14 place-items-center rounded-2xl text-2xl ${c.tint}`}>
-                  {c.emoji}
-                </span>
-                <span className="text-xs font-semibold leading-tight">{c.label}</span>
-                <span className="text-[10px] font-medium text-muted-foreground">
-                  {c.items} items
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <h2 className="mt-6 mb-3 text-sm font-bold tracking-tight">Featured collections</h2>
-          <div className="space-y-3">
-            {[
-              { title: "Fresh from farms", desc: "Seasonal fruits & veggies", emoji: "🍅" },
-              { title: "Monthly essentials", desc: "Staples for your kitchen", emoji: "🍚" },
-              { title: "Healthy breakfast", desc: "Start your day right", emoji: "🥣" },
-            ].map((f) => (
-              <button
-                key={f.title}
-                type="button"
-                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left shadow-[var(--shadow-card)]"
-              >
-                <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-xl">
-                  {f.emoji}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold">{f.title}</p>
-                  <p className="truncate text-[11px] font-medium text-muted-foreground">
-                    {f.desc}
-                  </p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">
+              {categories.length === 0
+                ? "No categories added yet."
+                : "No categories match your search."}
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {filtered.map((c) => (
+                <button
+                  key={c._id}
+                  type="button"
+                  onClick={() => navigate({ to: "/", search: { category: c.label } as never })}
+                  className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 text-center shadow-[var(--shadow-card)] transition-transform active:scale-[0.97]"
+                >
+                  {c.image ? (
+                    <img
+                      src={c.image}
+                      alt={c.label}
+                      className="h-14 w-14 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-2xl">
+                      🛒
+                    </div>
+                  )}
+                  <span className="text-xs font-semibold leading-tight">{c.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </main>
       </div>
-      <BottomNav />
     </div>
   );
 }
