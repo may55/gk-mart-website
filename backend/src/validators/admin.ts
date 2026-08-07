@@ -13,48 +13,33 @@ const adminLoginSchema = Joi.object({
 const productCreateSchema = Joi.object({
   name: Joi.string().required().trim().min(1).max(100),
   volume: Joi.string().required().trim().min(1).max(50),
+  barcode: Joi.string().trim().optional(),
   sellingPrice: Joi.number().required().min(0),
   marketPrice: Joi.number().required().min(0),
   unitsInStock: Joi.number().min(0).default(0),
   averageCostPrice: Joi.number().min(0).default(0),
   categories: Joi.array().items(Joi.string().trim()).default([]),
+  isVisible: Joi.boolean().default(true),
 });
 
 const productUpdateSchema = Joi.object({
   name: Joi.string().trim().min(1).max(100),
   volume: Joi.string().trim().min(1).max(50),
+  barcode: Joi.string().trim().optional(),
   sellingPrice: Joi.number().min(0),
   marketPrice: Joi.number().min(0),
   unitsInStock: Joi.number().min(0),
   averageCostPrice: Joi.number().min(0),
   categories: Joi.array().items(Joi.string().trim()),
+  isVisible: Joi.boolean(),
 });
 
 const inventoryBatchCreateSchema = Joi.object({
   itemEnum: Joi.string().required().trim().lowercase(),
   numberOfUnits: Joi.number().required().min(1),
   totalCostPrice: Joi.number().required().min(0),
-  marginPercent: Joi.number().required().min(0),
-  vendorName: Joi.string().allow('').default(''),
-});
-
-const inventoryBatchUpdateSchema = Joi.object({
-  marginPercent: Joi.number().required().min(0),
-});
-
-const inventoryBulkCreateSchema = Joi.object({
-  vendorName: Joi.string().allow('').default(''),
-  items: Joi.array()
-    .items(
-      Joi.object({
-        itemEnum: Joi.string().required().trim().lowercase(),
-        numberOfUnits: Joi.number().required().min(1),
-        totalCostPrice: Joi.number().required().min(0),
-        marginPercent: Joi.number().required().min(0),
-      })
-    )
-    .min(1)
-    .required(),
+  vendorName: Joi.string().required().trim().min(1),
+  expiryDate: Joi.date().optional(),
 });
 
 const orderItemSchema = Joi.object({
@@ -135,10 +120,6 @@ export const validateProductUpdate = (data: unknown) =>
   productUpdateSchema.validate(data, { abortEarly: false });
 export const validateInventoryBatchCreate = (data: unknown) =>
   inventoryBatchCreateSchema.validate(data, { abortEarly: false });
-export const validateInventoryBatchUpdate = (data: unknown) =>
-  inventoryBatchUpdateSchema.validate(data, { abortEarly: false });
-export const validateInventoryBulkCreate = (data: unknown) =>
-  inventoryBulkCreateSchema.validate(data, { abortEarly: false });
 export const validateOrderCreate = (data: unknown) =>
   orderCreateSchema.validate(data, { abortEarly: false });
 export const validateOrderUpdate = (data: unknown) =>

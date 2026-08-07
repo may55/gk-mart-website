@@ -11,6 +11,17 @@ export interface Product {
   averageCostPrice: number;
   images: string[];
   categories: string[];
+  isVisible: boolean;
+}
+
+export interface InventoryBatch {
+  _id: string;
+  itemEnum: string;
+  inventoryBatch: number;
+  numberOfUnits: number;
+  totalCostPrice: number;
+  vendorName: string;
+  createdAt: string;
 }
 
 export interface Category {

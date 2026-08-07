@@ -1,4 +1,5 @@
 import ProductRepository from '../repositories/ProductRepository';;
+import CategoryRepository from '../repositories/CategoryRepository';
 import { uploadItemImage } from '../lib/s3';
 import { IProduct } from '../models/Product';;
 
@@ -10,6 +11,7 @@ interface CreateProductData {
   unitsInStock?: number;
   averageCostPrice?: number;
   categories?: string[];
+  isVisible?: boolean;
 }
 
 interface UpdateProductData {
@@ -20,6 +22,7 @@ interface UpdateProductData {
   unitsInStock?: number;
   averageCostPrice?: number;
   categories?: string[];
+  isVisible?: boolean;
 }
 
 const buildEnum = (name: string, volume: string): string => {
@@ -27,12 +30,14 @@ const buildEnum = (name: string, volume: string): string => {
 };
 
 class ProductService {
+  // Used by public routes — only returns visible products
   async getAll(): Promise<IProduct[]> {
-    return await ProductRepository.findAll();
+    return await ProductRepository.findAll(true);
   }
 
+  // Used by public routes — only returns visible products
   async getByEnum(productEnum: string): Promise<IProduct> {
-    const product = await ProductRepository.findByEnum(productEnum);
+    const product = await ProductRepository.findByEnum(productEnum, true);
     if (!product) throw Object.assign(new Error('Product not found'), { statusCode: 404 });
     return product;
   }
@@ -45,10 +50,18 @@ class ProductService {
       throw new Error(`Product with enum "${productEnum}" already exists`);
     }
 
+    if (data.categories?.length) {
+      await Promise.all(data.categories.map((label) => CategoryRepository.findOrCreateByLabel(label)));
+    }
+
     return await ProductRepository.create({ ...data, enum: productEnum, images: [] });
   }
 
   async update(productEnum: string, data: UpdateProductData): Promise<IProduct> {
+    if (data.categories?.length) {
+      await Promise.all(data.categories.map((label) => CategoryRepository.findOrCreateByLabel(label)));
+    }
+
     const product = await ProductRepository.updateByEnum(productEnum, data);
     if (!product) throw Object.assign(new Error('Product not found'), { statusCode: 404 });
     return product;

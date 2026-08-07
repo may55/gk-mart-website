@@ -28,7 +28,7 @@ echo -e "${GREEN}✓ Ports cleared${NC}"
 echo -e "${GREEN}Starting GK Mart Backend (port 3001) and Frontend (port 5173)...${NC}\n"
 
 # Start backend and frontend in parallel
-(cd backend && npm run dev) &
+(cd backend && NODE_ENV=development npm run dev) &
 BACKEND_PID=$!
 
 sleep 2

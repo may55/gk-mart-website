@@ -9,7 +9,7 @@ publicRouter.get('/products', async (req, res, next) => {
   try {
     const q = req.query['q'] as string | undefined;
     const category = req.query['category'] as string | undefined;
-    const products = await ProductRepository.search(q, category);
+    const products = await ProductRepository.search(q, category, true);
     res.json({ success: true, data: products });
   } catch (err) {
     next(err);
@@ -19,7 +19,7 @@ publicRouter.get('/products', async (req, res, next) => {
 // GET /api/products/:enum
 publicRouter.get('/products/:enum', async (req, res, next) => {
   try {
-    const product = await ProductRepository.findByEnum(req.params['enum']);
+    const product = await ProductRepository.findByEnum(req.params['enum'], true);
     if (!product) {
       res.status(404).json({ success: false, message: 'Product not found' });
       return;

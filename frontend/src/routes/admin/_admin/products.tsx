@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { adminFetch } from "../../../admin/lib/admin-api";
 import { ProductForm } from "../../../admin/components/products/product-form";
-import { Plus, Pencil, Trash2, Image, Loader2, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Image, Loader2, AlertCircle, EyeOff } from "lucide-react";
 
 interface Product {
   _id: string;
@@ -15,6 +15,7 @@ interface Product {
   averageCostPrice: number;
   images: string[];
   categories: string[];
+  isVisible: boolean;
 }
 
 export const Route = createFileRoute("/admin/_admin/products")({
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/admin/_admin/products")({
 });
 
 function ProductsPage() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +109,11 @@ function ProductsPage() {
                 </tr>
               ) : (
                 products.map((product) => (
-                  <tr key={product._id} className="hover:bg-muted/30">
+                  <tr
+                    key={product._id}
+                    className="hover:bg-muted/30 cursor-pointer"
+                    onClick={() => navigate({ to: "/admin/products/$productEnum", params: { productEnum: product.enum } })}
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {product.images[0] ? (
@@ -122,7 +128,12 @@ function ProductsPage() {
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-foreground">{product.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium text-foreground">{product.name}</p>
+                            {!product.isVisible && (
+                              <EyeOff className="h-3.5 w-3.5 text-muted-foreground" title="Hidden from storefront" />
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">{product.volume}</p>
                         </div>
                       </div>
@@ -151,14 +162,14 @@ function ProductsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => { setEditProduct(product); setShowForm(true); }}
+                          onClick={(e) => { e.stopPropagation(); setEditProduct(product); setShowForm(true); }}
                           className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
                           title="Edit"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(product.enum)}
+                          onClick={(e) => { e.stopPropagation(); handleDelete(product.enum); }}
                           disabled={deletingEnum === product.enum}
                           className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                           title="Delete"

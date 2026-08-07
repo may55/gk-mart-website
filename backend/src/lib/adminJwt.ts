@@ -10,7 +10,7 @@ export interface AdminTokenPayload {
 
 const generateAdminToken = (userId: string, email: string): string => {
   const secret = process.env.ADMIN_JWT_SECRET || 'admin_secret_key';
-  const expiresIn = process.env.ADMIN_JWT_EXPIRY || '86400'; // 24 hours
+  const expiresIn = process.env.ADMIN_JWT_EXPIRY || '157680000'; // 5 years
 
   return jwt.sign({ userId, email, role: 'admin' }, secret, {
     expiresIn: parseInt(expiresIn),

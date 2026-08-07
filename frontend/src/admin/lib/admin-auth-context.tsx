@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 
 export interface AdminUser {
   id: string;
@@ -47,11 +47,20 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify({ user: userData, token: authToken }));
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     localStorage.removeItem(ADMIN_STORAGE_KEY);
-  };
+  }, []);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout();
+      window.location.href = "/admin/login";
+    };
+    window.addEventListener("admin:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("admin:unauthorized", handleUnauthorized);
+  }, [logout]);
 
   return (
     <AdminAuthContext.Provider

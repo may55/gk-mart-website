@@ -28,6 +28,9 @@ export async function adminFetch<T = unknown>(
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      window.dispatchEvent(new CustomEvent("admin:unauthorized"));
+    }
     throw new Error(body?.message ?? `Request failed: ${response.status}`);
   }
 
@@ -47,6 +50,9 @@ export async function adminUpload(path: string, formData: FormData): Promise<unk
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      window.dispatchEvent(new CustomEvent("admin:unauthorized"));
+    }
     throw new Error(body?.message ?? `Upload failed: ${response.status}`);
   }
 

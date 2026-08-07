@@ -5,7 +5,6 @@ import {
   Users,
   ShoppingCart,
   Wallet,
-  Boxes,
   Bell,
   LogOut,
 } from "lucide-react";
@@ -18,7 +17,6 @@ const NAV_ITEMS = [
   { label: "Manage Users", icon: Users, to: "/admin/users" },
   { label: "Manage Orders", icon: ShoppingCart, to: "/admin/orders" },
   { label: "Accounts", icon: Wallet, to: "/admin/accounts" },
-  { label: "Inventory", icon: Boxes, to: "/admin/inventory" },
   { label: "Notifications", icon: Bell, to: "/admin/notifications" },
 ] as const;
 

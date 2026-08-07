@@ -23,7 +23,10 @@ const app: Express = express();
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-const allowedOrigins = [FRONTEND_URL];
+// In development, always allow the local Vite dev server alongside the configured origin
+const allowedOrigins = process.env.NODE_ENV === 'development'
+  ? [FRONTEND_URL, 'http://localhost:5173']
+  : [FRONTEND_URL];
 
 // Middleware
 app.use(

@@ -5,8 +5,8 @@ export interface IInventoryBatch extends Document {
   inventoryBatch: number;
   numberOfUnits: number;
   totalCostPrice: number;
-  marginPercent: number;
   vendorName: string;
+  expiryDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,14 +33,13 @@ const InventoryBatchSchema = new Schema<IInventoryBatch>(
       required: [true, 'Total cost price is required'],
       min: [0, 'Total cost price cannot be negative'],
     },
-    marginPercent: {
-      type: Number,
-      required: [true, 'Margin percent is required'],
-      min: [0, 'Margin percent cannot be negative'],
-    },
     vendorName: {
       type: String,
-      default: '',
+      required: [true, 'Vendor name is required'],
+      trim: true,
+    },
+    expiryDate: {
+      type: Date,
     },
   },
   { timestamps: true }

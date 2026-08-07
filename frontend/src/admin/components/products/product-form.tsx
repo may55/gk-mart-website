@@ -1,23 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { adminFetch, adminUpload } from "../../../admin/lib/admin-api";
 import { X, Upload, Loader2, Plus } from "lucide-react";
+
+interface CategoryOption {
+  _id: string;
+  label: string;
+}
 
 interface Product {
   _id: string;
   name: string;
   volume: string;
   enum: string;
+  barcode?: string;
   sellingPrice: number;
   marketPrice: number;
   unitsInStock: number;
   averageCostPrice: number;
   images: string[];
   categories: string[];
+  isVisible: boolean;
 }
 
 interface ProductFormData {
   name: string;
   volume: string;
+  barcode: string;
   sellingPrice: string;
   marketPrice: string;
   unitsInStock: string;
@@ -27,6 +35,7 @@ interface ProductFormData {
 const EMPTY_FORM: ProductFormData = {
   name: "",
   volume: "",
+  barcode: "",
   sellingPrice: "",
   marketPrice: "",
   unitsInStock: "0",
@@ -46,6 +55,7 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
       ? {
           name: item.name,
           volume: item.volume,
+          barcode: item.barcode ?? "",
           sellingPrice: String(item.sellingPrice),
           marketPrice: String(item.marketPrice),
           unitsInStock: String(item.unitsInStock),
@@ -53,15 +63,33 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
         }
       : EMPTY_FORM
   );
+  const [isVisible, setIsVisible] = useState(item?.isVisible ?? true);
   const [files, setFiles] = useState<File[]>([]);
   const [categories, setCategories] = useState<string[]>(item?.categories ?? []);
   const [categoryInput, setCategoryInput] = useState("");
+  const [allCategories, setAllCategories] = useState<CategoryOption[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const categoryInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const previewEnum = form.name && form.volume
     ? `${form.name}_${form.volume}`.toLowerCase().replace(/\s+/g, "_")
     : "";
+
+  useEffect(() => {
+    adminFetch<{ data: CategoryOption[] }>("/categories")
+      .then((res) => setAllCategories(res.data))
+      .catch(() => {});
+  }, []);
+
+  const suggestions = categoryInput.trim()
+    ? allCategories.filter(
+        (c) =>
+          c.label.toLowerCase().includes(categoryInput.toLowerCase()) &&
+          !categories.includes(c.label)
+      )
+    : [];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? []);
@@ -92,11 +120,13 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
       const payload = {
         name: form.name.trim(),
         volume: form.volume.trim(),
+        ...(form.barcode.trim() ? { barcode: form.barcode.trim() } : {}),
         sellingPrice: parseFloat(form.sellingPrice),
         marketPrice: parseFloat(form.marketPrice),
         unitsInStock: parseFloat(form.unitsInStock),
         averageCostPrice: parseFloat(form.averageCostPrice),
         categories,
+        isVisible,
       };
 
       let savedEnum: string;
@@ -159,6 +189,10 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
             {field("Volume", "volume")}
           </div>
 
+          <div className="mt-3">
+            {field("Barcode / SKU", "barcode")}
+          </div>
+
           <div className="mt-3 space-y-1.5">
             <label className="text-sm font-medium text-foreground">Enum (auto-generated)</label>
             <input
@@ -179,11 +213,14 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
           {/* Categories */}
           <div className="mt-3 space-y-2">
             <label className="text-sm font-medium text-foreground">Categories</label>
-            <div className="flex gap-2">
+            <div className="relative flex gap-2">
               <input
+                ref={categoryInputRef}
                 type="text"
                 value={categoryInput}
-                onChange={(e) => setCategoryInput(e.target.value)}
+                onChange={(e) => { setCategoryInput(e.target.value); setShowSuggestions(true); }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -192,9 +229,10 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
                       setCategories((p) => [...p, val]);
                     }
                     setCategoryInput("");
+                    setShowSuggestions(false);
                   }
                 }}
-                placeholder="Type and press Enter to add"
+                placeholder="Search or type a new category"
                 className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
               <button
@@ -205,11 +243,32 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
                     setCategories((p) => [...p, val]);
                   }
                   setCategoryInput("");
+                  setShowSuggestions(false);
                 }}
                 className="flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent"
               >
                 <Plus className="h-4 w-4" />
               </button>
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute left-0 top-full z-10 mt-1 w-full rounded-md border border-border bg-card shadow-md">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s._id}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setCategories((p) => [...p, s.label]);
+                        setCategoryInput("");
+                        setShowSuggestions(false);
+                        categoryInputRef.current?.focus();
+                      }}
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             {categories.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
@@ -284,6 +343,23 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
                 />
               </label>
             )}
+          </div>
+
+          {/* Visibility toggle */}
+          <div className="mt-4 flex items-center justify-between rounded-md border border-border px-3 py-2.5">
+            <div>
+              <p className="text-sm font-medium text-foreground">Visible on storefront</p>
+              <p className="text-xs text-muted-foreground">Hidden products won't appear to customers</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsVisible((v) => !v)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${isVisible ? "bg-primary" : "bg-muted-foreground/30"}`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform ${isVisible ? "translate-x-5" : "translate-x-0"}`}
+              />
+            </button>
           </div>
 
           {error && (

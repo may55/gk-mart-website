@@ -22,6 +22,13 @@ class CategoryRepository {
     const result = await Category.findByIdAndDelete(id);
     return result !== null;
   }
+
+  async findOrCreateByLabel(label: string): Promise<ICategory> {
+    const existing = await Category.findOne({ label: new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+    if (existing) return existing;
+    const cat = new Category({ label });
+    return await cat.save();
+  }
 }
 
 export default new CategoryRepository();

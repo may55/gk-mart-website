@@ -4,12 +4,14 @@ export interface IProduct extends Document {
   name: string;
   volume: string;
   enum: string;
+  barcode?: string;
   sellingPrice: number;
   marketPrice: number;
   unitsInStock: number;
   averageCostPrice: number;
   images: string[];
   categories: string[];
+  isVisible: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,6 +36,11 @@ const ProductSchema = new Schema<IProduct>(
       lowercase: true,
       immutable: true,
     },
+    barcode: {
+      type: String,
+      trim: true,
+      sparse: true,
+    },
     sellingPrice: {
       type: Number,
       required: [true, 'Selling price is required'],
@@ -53,6 +60,10 @@ const ProductSchema = new Schema<IProduct>(
       type: Number,
       default: 0,
       min: [0, 'Average cost price cannot be negative'],
+    },
+    isVisible: {
+      type: Boolean,
+      default: true,
     },
     images: {
       type: [String],
