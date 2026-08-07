@@ -2,6 +2,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Package,
+  PackagePlus,
   Users,
   ShoppingCart,
   Wallet,
@@ -14,6 +15,7 @@ import { cn } from "../../lib/utils";
 const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
   { label: "Manage Products", icon: Package, to: "/admin/products" },
+  { label: "Add Inventory", icon: PackagePlus, to: "/admin/inventory" },
   { label: "Manage Users", icon: Users, to: "/admin/users" },
   { label: "Manage Orders", icon: ShoppingCart, to: "/admin/orders" },
   { label: "Accounts", icon: Wallet, to: "/admin/accounts" },

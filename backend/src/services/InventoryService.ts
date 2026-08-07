@@ -9,6 +9,11 @@ interface CreateBatchData {
   vendorName: string;
 }
 
+interface UpdateBatchData {
+  numberOfUnits: number;
+  totalCostPrice: number;
+}
+
 class InventoryService {
   async getAll(): Promise<IInventoryBatch[]> {
     return await InventoryBatchRepository.findAll();
@@ -16,6 +21,38 @@ class InventoryService {
 
   async getByItemEnum(itemEnum: string): Promise<IInventoryBatch[]> {
     return await InventoryBatchRepository.findByItemEnum(itemEnum);
+  }
+
+  async updateBatch(batchId: string, data: UpdateBatchData): Promise<IInventoryBatch> {
+    const batch = await InventoryBatchRepository.findById(batchId);
+    if (!batch) throw Object.assign(new Error('Batch not found'), { statusCode: 404 });
+
+    const product = await ProductRepository.findByEnum(batch.itemEnum);
+    if (!product) throw Object.assign(new Error('Product not found'), { statusCode: 404 });
+
+    const { numberOfUnits: newUnits, totalCostPrice: newTotalCost } = data;
+    const oldUnits = batch.numberOfUnits;
+    const oldTotalCost = batch.totalCostPrice;
+
+    const totalUnits = product.unitsInStock;
+    const updatedTotalUnits = totalUnits - oldUnits + newUnits;
+    const updatedAvgCost =
+      updatedTotalUnits > 0
+        ? (product.averageCostPrice * totalUnits - oldTotalCost + newTotalCost) / updatedTotalUnits
+        : 0;
+
+    const updated = await InventoryBatchRepository.updateById(batchId, {
+      numberOfUnits: newUnits,
+      totalCostPrice: newTotalCost,
+    });
+    if (!updated) throw Object.assign(new Error('Batch not found'), { statusCode: 404 });
+
+    await ProductRepository.updateByEnum(batch.itemEnum, {
+      unitsInStock: updatedTotalUnits,
+      averageCostPrice: Math.round(updatedAvgCost * 100) / 100,
+    });
+
+    return updated;
   }
 
   async createBatch(data: CreateBatchData): Promise<IInventoryBatch> {

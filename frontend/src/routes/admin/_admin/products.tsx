@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { adminFetch } from "../../../admin/lib/admin-api";
 import { ProductForm } from "../../../admin/components/products/product-form";
-import { Plus, Pencil, Trash2, Image, Loader2, AlertCircle, EyeOff } from "lucide-react";
+import { Pencil, Trash2, Image, Loader2, AlertCircle, EyeOff } from "lucide-react";
 
 interface Product {
   _id: string;
@@ -66,13 +66,6 @@ function ProductsPage() {
           <h1 className="text-2xl font-semibold text-foreground">Manage Items</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">{products.length} product(s) total</p>
         </div>
-        <button
-          onClick={() => { setEditProduct(undefined); setShowForm(true); }}
-          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" />
-          Add Product
-        </button>
       </div>
 
       {isLoading ? (
@@ -104,7 +97,7 @@ function ProductsPage() {
               {products.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-muted-foreground">
-                    No items yet. Click "Add Product" to get started.
+                    No products yet. Add one via Add Inventory.
                   </td>
                 </tr>
               ) : (

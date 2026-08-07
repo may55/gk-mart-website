@@ -28,6 +28,9 @@ productsRouter.delete('/:enum', (req, res, next) => ProductController.remove(req
 productsRouter.post('/:enum/images', upload.array('images', 5), (req, res, next) =>
   ProductController.uploadImages(req, res, next)
 );
+productsRouter.delete('/:enum/images/:index', (req, res, next) =>
+  ProductController.deleteImage(req, res, next)
+);
 productsRouter.put('/:enum/images', upload.array('images', 5), (req, res, next) =>
   ProductController.replaceImages(req, res, next)
 );

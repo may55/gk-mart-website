@@ -6,7 +6,7 @@ import { AdminRequest } from '../../middleware/adminAuth';
 class ProductController {
   async getAll(req: AdminRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const products = await ProductService.getAll();
+      const products = await ProductService.getAllAdmin();
       res.json({ success: true, data: products });
     } catch (error) {
       next(error);
@@ -15,7 +15,7 @@ class ProductController {
 
   async getOne(req: AdminRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const product = await ProductService.getByEnum(req.params.enum);
+      const product = await ProductService.getByEnumAdmin(req.params.enum);
       res.json({ success: true, data: product });
     } catch (error) {
       next(error);
@@ -62,6 +62,20 @@ class ProductController {
     try {
       await ProductService.delete(req.params.enum);
       res.json({ success: true, message: 'Product deleted' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteImage(req: AdminRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const index = parseInt(req.params.index, 10);
+      if (isNaN(index)) {
+        res.status(400).json({ success: false, message: 'Invalid image index' });
+        return;
+      }
+      const product = await ProductService.deleteImage(req.params.enum, index);
+      res.json({ success: true, message: 'Image deleted', data: product });
     } catch (error) {
       next(error);
     }

@@ -1,6 +1,6 @@
 import ProductRepository from '../repositories/ProductRepository';;
 import CategoryRepository from '../repositories/CategoryRepository';
-import { uploadItemImage } from '../lib/s3';
+import { uploadItemImage, deleteItemImage } from '../lib/s3';
 import { IProduct } from '../models/Product';;
 
 interface CreateProductData {
@@ -38,6 +38,16 @@ class ProductService {
   // Used by public routes — only returns visible products
   async getByEnum(productEnum: string): Promise<IProduct> {
     const product = await ProductRepository.findByEnum(productEnum, true);
+    if (!product) throw Object.assign(new Error('Product not found'), { statusCode: 404 });
+    return product;
+  }
+
+  async getAllAdmin(): Promise<IProduct[]> {
+    return await ProductRepository.findAll(false);
+  }
+
+  async getByEnumAdmin(productEnum: string): Promise<IProduct> {
+    const product = await ProductRepository.findByEnum(productEnum, false);
     if (!product) throw Object.assign(new Error('Product not found'), { statusCode: 404 });
     return product;
   }
@@ -103,6 +113,30 @@ class ProductService {
     const updated = await ProductRepository.updateByEnum(productEnum, {
       images: [...product.images, ...uploadedUrls] as unknown as string[],
     } as Partial<IProduct>);
+
+    if (!updated) throw Object.assign(new Error('Product not found'), { statusCode: 404 });
+    return updated;
+  }
+
+  async deleteImage(productEnum: string, index: number): Promise<IProduct> {
+    const product = await ProductRepository.findByEnum(productEnum);
+    if (!product) throw Object.assign(new Error('Product not found'), { statusCode: 404 });
+
+    if (index < 0 || index >= product.images.length) {
+      throw Object.assign(new Error('Image index out of range'), { statusCode: 400 });
+    }
+
+    const [imageUrl] = product.images.splice(index, 1);
+
+    try {
+      await deleteItemImage(imageUrl);
+    } catch {
+      // S3 delete failure should not block DB cleanup
+    }
+
+    const updated = await ProductRepository.updateByEnum(productEnum, {
+      images: product.images,
+    } as unknown as Partial<IProduct>);
 
     if (!updated) throw Object.assign(new Error('Product not found'), { statusCode: 404 });
     return updated;

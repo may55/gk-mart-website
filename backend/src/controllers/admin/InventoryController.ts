@@ -16,6 +16,32 @@ class InventoryController {
     }
   }
 
+  async update(req: AdminRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { numberOfUnits, totalCostPrice } = req.body as {
+        numberOfUnits?: unknown;
+        totalCostPrice?: unknown;
+      };
+      const units = Number(numberOfUnits);
+      const cost = Number(totalCostPrice);
+      if (!Number.isInteger(units) || units < 1) {
+        res.status(400).json({ success: false, message: 'numberOfUnits must be a positive integer' });
+        return;
+      }
+      if (isNaN(cost) || cost < 0) {
+        res.status(400).json({ success: false, message: 'totalCostPrice must be non-negative' });
+        return;
+      }
+      const batch = await InventoryService.updateBatch(req.params.id, {
+        numberOfUnits: units,
+        totalCostPrice: cost,
+      });
+      res.json({ success: true, message: 'Batch updated', data: batch });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async create(req: AdminRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { error, value } = validateInventoryBatchCreate(req.body);

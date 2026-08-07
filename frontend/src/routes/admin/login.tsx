@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAdminAuth } from "../../admin/lib/admin-auth-context";
@@ -17,10 +17,11 @@ function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (isLoggedIn) {
-    navigate({ to: "/admin/dashboard" });
-    return null;
-  }
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate({ to: "/admin/dashboard" });
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +50,8 @@ function AdminLoginPage() {
       setIsLoading(false);
     }
   };
+
+  if (isLoggedIn) return null;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">

@@ -70,6 +70,8 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
   const [allCategories, setAllCategories] = useState<CategoryOption[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const categoryInputRef = useRef<HTMLInputElement>(null);
+  const [existingImages, setExistingImages] = useState<string[]>(item?.images ?? []);
+  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,6 +112,20 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
   };
 
   const removeFile = (idx: number) => setFiles((prev) => prev.filter((_, i) => i !== idx));
+
+  const handleDeleteExistingImage = async (index: number) => {
+    if (!item) return;
+    setDeletingIndex(index);
+    setError(null);
+    try {
+      await adminFetch(`/products/${item.enum}/images/${index}`, { method: "DELETE" });
+      setExistingImages((prev) => prev.filter((_, i) => i !== index));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete image");
+    } finally {
+      setDeletingIndex(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -294,18 +310,29 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
           {/* Image upload */}
           <div className="mt-4 space-y-2">
             <label className="text-sm font-medium text-foreground">
-              Images ({(item?.images.length ?? 0) + files.length}/5)
+              Images ({existingImages.length + files.length}/5)
             </label>
             {/* Existing images */}
-            {item && item.images.length > 0 && (
+            {item && existingImages.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {item.images.map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt={`item-${i}`}
-                    className="h-16 w-16 rounded-md border object-cover"
-                  />
+                {existingImages.map((url, i) => (
+                  <div key={url} className="relative">
+                    <img
+                      src={url}
+                      alt={`item-${i}`}
+                      className="h-16 w-16 rounded-md border object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteExistingImage(i)}
+                      disabled={deletingIndex !== null}
+                      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white disabled:opacity-60"
+                    >
+                      {deletingIndex === i
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <X className="h-3 w-3" />}
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -330,7 +357,7 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
                 ))}
               </div>
             )}
-            {(item?.images.length ?? 0) + files.length < 5 && (
+            {existingImages.length + files.length < 5 && (
               <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground hover:border-primary hover:text-primary">
                 <Upload className="h-4 w-4" />
                 Add images (max 150KB each)
