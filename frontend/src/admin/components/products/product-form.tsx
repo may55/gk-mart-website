@@ -10,11 +10,13 @@ interface CategoryOption {
 interface Product {
   _id: string;
   name: string;
-  volume: string;
+  sku: string;
   enum: string;
   barcode?: string;
   sellingPrice: number;
   marketPrice: number;
+  expiryMonth?: number;
+  expiryYear?: number;
   unitsInStock: number;
   averageCostPrice: number;
   images: string[];
@@ -24,22 +26,22 @@ interface Product {
 
 interface ProductFormData {
   name: string;
-  volume: string;
+  sku: string;
   barcode: string;
   sellingPrice: string;
   marketPrice: string;
-  unitsInStock: string;
-  averageCostPrice: string;
+  expiryMonth: string;
+  expiryYear: string;
 }
 
 const EMPTY_FORM: ProductFormData = {
   name: "",
-  volume: "",
+  sku: "",
   barcode: "",
   sellingPrice: "",
   marketPrice: "",
-  unitsInStock: "0",
-  averageCostPrice: "0",
+  expiryMonth: "",
+  expiryYear: "",
 };
 
 interface Props {
@@ -54,14 +56,14 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
     item
       ? {
           name: item.name,
-          volume: item.volume,
+          sku: item.sku,
           barcode: item.barcode ?? "",
           sellingPrice: String(item.sellingPrice),
           marketPrice: String(item.marketPrice),
-          unitsInStock: String(item.unitsInStock),
-          averageCostPrice: String(item.averageCostPrice),
+          expiryMonth: item.expiryMonth ? String(item.expiryMonth) : "",
+          expiryYear: item.expiryYear ? String(item.expiryYear) : "",
         }
-      : EMPTY_FORM
+      : EMPTY_FORM,
   );
   const [isVisible, setIsVisible] = useState(item?.isVisible ?? true);
   const [files, setFiles] = useState<File[]>([]);
@@ -75,9 +77,13 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const previewEnum = form.name && form.volume
-    ? `${form.name}_${form.volume}`.toLowerCase().replace(/\s+/g, "_")
-    : "";
+  const previewEnum =
+    form.name && form.sku && form.marketPrice
+      ? `${form.name}_${form.sku}_${form.marketPrice}_${form.expiryMonth || "na"}_${form.expiryYear || "na"}`
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_")
+          .replace(/^_|_$/g, "")
+      : "";
 
   useEffect(() => {
     adminFetch<{ data: CategoryOption[] }>("/categories")
@@ -89,7 +95,7 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
     ? allCategories.filter(
         (c) =>
           c.label.toLowerCase().includes(categoryInput.toLowerCase()) &&
-          !categories.includes(c.label)
+          !categories.includes(c.label),
       )
     : [];
 
@@ -135,12 +141,12 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
     try {
       const payload = {
         name: form.name.trim(),
-        volume: form.volume.trim(),
+        sku: form.sku.trim(),
         ...(form.barcode.trim() ? { barcode: form.barcode.trim() } : {}),
         sellingPrice: parseFloat(form.sellingPrice),
         marketPrice: parseFloat(form.marketPrice),
-        unitsInStock: parseFloat(form.unitsInStock),
-        averageCostPrice: parseFloat(form.averageCostPrice),
+        ...(form.expiryMonth ? { expiryMonth: parseInt(form.expiryMonth, 10) } : {}),
+        ...(form.expiryYear ? { expiryYear: parseInt(form.expiryYear, 10) } : {}),
         categories,
         isVisible,
       };
@@ -202,12 +208,10 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
         <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto p-6">
           <div className="grid grid-cols-2 gap-4">
             {field("Name", "name")}
-            {field("Volume", "volume")}
+            {field("SKU", "sku")}
           </div>
 
-          <div className="mt-3">
-            {field("Barcode / SKU", "barcode")}
-          </div>
+          <div className="mt-3">{field("Barcode (optional)", "barcode")}</div>
 
           <div className="mt-3 space-y-1.5">
             <label className="text-sm font-medium text-foreground">Enum (auto-generated)</label>
@@ -216,14 +220,16 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
               value={isEdit ? item.enum : previewEnum}
               className="w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground"
             />
-            {!isEdit && <p className="text-xs text-muted-foreground">Cannot be changed after creation</p>}
+            {!isEdit && (
+              <p className="text-xs text-muted-foreground">Cannot be changed after creation</p>
+            )}
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-4">
             {field("Selling Price (₹)", "sellingPrice", "number")}
             {field("Market Price (₹)", "marketPrice", "number")}
-            {field("Units in Stock", "unitsInStock", "number")}
-            {field("Avg Cost Price (₹)", "averageCostPrice", "number")}
+            {field("Expiry Month", "expiryMonth", "number")}
+            {field("Expiry Year", "expiryYear", "number")}
           </div>
 
           {/* Categories */}
@@ -234,7 +240,10 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
                 ref={categoryInputRef}
                 type="text"
                 value={categoryInput}
-                onChange={(e) => { setCategoryInput(e.target.value); setShowSuggestions(true); }}
+                onChange={(e) => {
+                  setCategoryInput(e.target.value);
+                  setShowSuggestions(true);
+                }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                 onKeyDown={(e) => {
@@ -328,9 +337,11 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
                       disabled={deletingIndex !== null}
                       className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white disabled:opacity-60"
                     >
-                      {deletingIndex === i
-                        ? <Loader2 className="h-3 w-3 animate-spin" />
-                        : <X className="h-3 w-3" />}
+                      {deletingIndex === i ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <X className="h-3 w-3" />
+                      )}
                     </button>
                   </div>
                 ))}
@@ -376,7 +387,9 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
           <div className="mt-4 flex items-center justify-between rounded-md border border-border px-3 py-2.5">
             <div>
               <p className="text-sm font-medium text-foreground">Visible on storefront</p>
-              <p className="text-xs text-muted-foreground">Hidden products won't appear to customers</p>
+              <p className="text-xs text-muted-foreground">
+                Hidden products won't appear to customers
+              </p>
             </div>
             <button
               type="button"

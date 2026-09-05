@@ -2,21 +2,40 @@ import Product, { IProduct } from '../models/Product';
 
 class ProductRepository {
   async findAll(visibleOnly = false): Promise<IProduct[]> {
-    const filter = visibleOnly ? { isVisible: true } : {};
+    const filter: Record<string, unknown> = visibleOnly
+      ? { isVisible: true, unitsInStock: { $gt: 0 } }
+      : {};
     return await Product.find(filter).sort({ createdAt: -1 });
   }
 
   async search(q?: string, category?: string, visibleOnly = false): Promise<IProduct[]> {
     const filter: Record<string, unknown> = {};
-    if (visibleOnly) filter['isVisible'] = true;
-    if (q) filter['name'] = { $regex: q, $options: 'i' };
+    if (visibleOnly) {
+      filter['isVisible'] = true;
+      filter['unitsInStock'] = { $gt: 0 };
+    }
+    if (q) {
+      const or: Record<string, unknown>[] = [
+        { name: { $regex: q, $options: 'i' } },
+        { sku: { $regex: q, $options: 'i' } },
+        { enum: { $regex: q, $options: 'i' } },
+      ];
+      const numericQuery = Number(q);
+      if (Number.isFinite(numericQuery)) {
+        or.push({ marketPrice: numericQuery }, { expiryYear: numericQuery }, { expiryMonth: numericQuery });
+      }
+      filter['$or'] = or;
+    }
     if (category) filter['categories'] = category;
     return await Product.find(filter).sort({ createdAt: -1 });
   }
 
   async findByEnum(productEnum: string, visibleOnly = false): Promise<IProduct | null> {
     const filter: Record<string, unknown> = { enum: productEnum.toLowerCase() };
-    if (visibleOnly) filter['isVisible'] = true;
+    if (visibleOnly) {
+      filter['isVisible'] = true;
+      filter['unitsInStock'] = { $gt: 0 };
+    }
     return await Product.findOne(filter);
   }
 
@@ -33,6 +52,14 @@ class ProductRepository {
     );
   }
 
+  async deductStock(productEnum: string, quantity: number): Promise<IProduct | null> {
+    return await Product.findOneAndUpdate(
+      { enum: productEnum.toLowerCase(), unitsInStock: { $gte: quantity } },
+      { $inc: { unitsInStock: -quantity } },
+      { new: true }
+    );
+  }
+
   async deleteByEnum(productEnum: string): Promise<boolean> {
     const result = await Product.findOneAndDelete({ enum: productEnum.toLowerCase() });
     return result !== null;
@@ -46,7 +73,10 @@ class ProductRepository {
   async findManyByEnum(enums: string[], visibleOnly = false): Promise<IProduct[]> {
     const lower = enums.map((e) => e.toLowerCase());
     const filter: Record<string, unknown> = { enum: { $in: lower } };
-    if (visibleOnly) filter['isVisible'] = true;
+    if (visibleOnly) {
+      filter['isVisible'] = true;
+      filter['unitsInStock'] = { $gt: 0 };
+    }
     return await Product.find(filter);
   }
 }

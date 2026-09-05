@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2, Clock, MapPin, Package } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthPromptModal } from "@/components/auth-prompt-modal";
 import { apiFetch } from "@/lib/api";
-import { formatPrice } from "@/lib/cart";
+import { formatPrice, calculateLineSavings } from "@/lib/pricing";
 import type { Order } from "@/lib/types";
 
 export const Route = createFileRoute("/orders")({
@@ -125,7 +125,7 @@ function OrdersPage() {
               </p>
               <ul className="divide-y divide-border">
                 {selected.items.map((item, i) => {
-                  const savings = (item.mrp - item.sellingPrice) * item.unit;
+                  const savings = calculateLineSavings(item.mrp, item.sellingPrice, item.unit);
                   return (
                     <li key={i} className="flex items-center gap-3 px-4 py-3">
                       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-muted text-base">

@@ -7,7 +7,7 @@ import { Pencil, Trash2, Image, Loader2, AlertCircle, EyeOff } from "lucide-reac
 interface Product {
   _id: string;
   name: string;
-  volume: string;
+  sku: string;
   enum: string;
   sellingPrice: number;
   marketPrice: number;
@@ -44,7 +44,9 @@ function ProductsPage() {
     }
   };
 
-  useEffect(() => { loadProducts(); }, []);
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
   const handleDelete = async (itemEnum: string) => {
     if (!confirm(`Delete product "${itemEnum}"? This cannot be undone.`)) return;
@@ -105,7 +107,12 @@ function ProductsPage() {
                   <tr
                     key={product._id}
                     className="hover:bg-muted/30 cursor-pointer"
-                    onClick={() => navigate({ to: "/admin/products/$productEnum", params: { productEnum: product.enum } })}
+                    onClick={() =>
+                      navigate({
+                        to: "/admin/products/$productEnum",
+                        params: { productEnum: product.enum },
+                      })
+                    }
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
@@ -124,10 +131,13 @@ function ProductsPage() {
                           <div className="flex items-center gap-1.5">
                             <p className="font-medium text-foreground">{product.name}</p>
                             {!product.isVisible && (
-                              <EyeOff className="h-3.5 w-3.5 text-muted-foreground" title="Hidden from storefront" />
+                              <EyeOff
+                                className="h-3.5 w-3.5 text-muted-foreground"
+                                title="Hidden from storefront"
+                              />
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">{product.volume}</p>
+                          <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
                         </div>
                       </div>
                     </td>
@@ -135,17 +145,26 @@ function ProductsPage() {
                       <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{product.enum}</code>
                     </td>
                     <td className="px-4 py-3 text-right font-medium">₹{product.sellingPrice}</td>
-                    <td className="px-4 py-3 text-right text-muted-foreground">₹{product.marketPrice}</td>
+                    <td className="px-4 py-3 text-right text-muted-foreground">
+                      ₹{product.marketPrice}
+                    </td>
                     <td className="px-4 py-3 text-right">{product.unitsInStock}</td>
-                    <td className="px-4 py-3 text-right text-muted-foreground">₹{product.averageCostPrice.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-center text-muted-foreground">{product.images.length}/5</td>
+                    <td className="px-4 py-3 text-right text-muted-foreground">
+                      ₹{product.averageCostPrice.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-center text-muted-foreground">
+                      {product.images.length}/5
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {product.categories.length === 0 ? (
                           <span className="text-xs text-muted-foreground">—</span>
                         ) : (
                           product.categories.map((c) => (
-                            <span key={c} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                            <span
+                              key={c}
+                              className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                            >
                               {c}
                             </span>
                           ))
@@ -155,14 +174,21 @@ function ProductsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={(e) => { e.stopPropagation(); setEditProduct(product); setShowForm(true); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditProduct(product);
+                            setShowForm(true);
+                          }}
                           className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
                           title="Edit"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(product.enum); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(product.enum);
+                          }}
                           disabled={deletingEnum === product.enum}
                           className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                           title="Delete"
@@ -187,7 +213,10 @@ function ProductsPage() {
         <ProductForm
           product={editProduct}
           onClose={() => setShowForm(false)}
-          onSaved={() => { setShowForm(false); loadProducts(); }}
+          onSaved={() => {
+            setShowForm(false);
+            loadProducts();
+          }}
         />
       )}
     </div>

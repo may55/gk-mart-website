@@ -50,6 +50,10 @@ publicRouter.post('/products/validate-cart', async (req, res, next) => {
       res.status(400).json({ success: false, message: 'items array is required' });
       return;
     }
+    if (items.some((item) => !Number.isInteger(item.quantity) || item.quantity < 1)) {
+      res.status(400).json({ success: false, message: 'Each quantity must be a positive integer' });
+      return;
+    }
 
     const enums = items.map((i) => i.productEnum);
     const products = await ProductRepository.findManyByEnum(enums);

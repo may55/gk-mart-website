@@ -1,12 +1,14 @@
 import InventoryBatchRepository from '../repositories/InventoryBatchRepository';
 import ProductRepository from '../repositories/ProductRepository';
 import { IInventoryBatch } from '../models/InventoryBatch';
+import { calculateReplacedBatchAverageCost, calculateWeightedAverageCost } from '../utils/pricing';
 
 interface CreateBatchData {
   itemEnum: string;
   numberOfUnits: number;
   totalCostPrice: number;
   vendorName: string;
+  billImage?: string;
 }
 
 interface UpdateBatchData {
@@ -15,14 +17,17 @@ interface UpdateBatchData {
 }
 
 class InventoryService {
+  /** Returns every recorded inventory batch, newest batches first. */
   async getAll(): Promise<IInventoryBatch[]> {
     return await InventoryBatchRepository.findAll();
   }
 
+  /** Returns inventory batches belonging to one product enum. */
   async getByItemEnum(itemEnum: string): Promise<IInventoryBatch[]> {
     return await InventoryBatchRepository.findByItemEnum(itemEnum);
   }
 
+  /** Replaces a batch and recalculates the product's stock and weighted cost. */
   async updateBatch(batchId: string, data: UpdateBatchData): Promise<IInventoryBatch> {
     const batch = await InventoryBatchRepository.findById(batchId);
     if (!batch) throw Object.assign(new Error('Batch not found'), { statusCode: 404 });
@@ -36,10 +41,13 @@ class InventoryService {
 
     const totalUnits = product.unitsInStock;
     const updatedTotalUnits = totalUnits - oldUnits + newUnits;
-    const updatedAvgCost =
-      updatedTotalUnits > 0
-        ? (product.averageCostPrice * totalUnits - oldTotalCost + newTotalCost) / updatedTotalUnits
-        : 0;
+    const updatedAvgCost = calculateReplacedBatchAverageCost(
+      totalUnits,
+      updatedTotalUnits,
+      product.averageCostPrice,
+      oldTotalCost,
+      newTotalCost,
+    );
 
     const updated = await InventoryBatchRepository.updateById(batchId, {
       numberOfUnits: newUnits,
@@ -49,12 +57,13 @@ class InventoryService {
 
     await ProductRepository.updateByEnum(batch.itemEnum, {
       unitsInStock: updatedTotalUnits,
-      averageCostPrice: Math.round(updatedAvgCost * 100) / 100,
+      averageCostPrice: updatedAvgCost,
     });
 
     return updated;
   }
 
+  /** Records incoming stock, updates aggregate stock/cost, and stores its vendor/bill metadata. */
   async createBatch(data: CreateBatchData): Promise<IInventoryBatch> {
     const { itemEnum, numberOfUnits, totalCostPrice, vendorName } = data;
 
@@ -74,19 +83,22 @@ class InventoryService {
       numberOfUnits,
       totalCostPrice,
       vendorName,
+      billImage: data.billImage,
     });
 
     const existingUnits = product.unitsInStock;
     const existingAvgCost = product.averageCostPrice;
     const newTotalUnits = existingUnits + numberOfUnits;
-    const newAvgCostPrice =
-      newTotalUnits > 0
-        ? (existingAvgCost * existingUnits + totalCostPrice) / newTotalUnits
-        : 0;
+    const newAvgCostPrice = calculateWeightedAverageCost(
+      existingUnits,
+      existingAvgCost,
+      numberOfUnits,
+      totalCostPrice,
+    );
 
     await ProductRepository.updateByEnum(itemEnum, {
       unitsInStock: newTotalUnits,
-      averageCostPrice: Math.round(newAvgCostPrice * 100) / 100,
+      averageCostPrice: newAvgCostPrice,
     });
 
     return batch;

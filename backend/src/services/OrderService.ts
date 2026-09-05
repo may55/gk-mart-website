@@ -40,16 +40,19 @@ interface UpdateOrderData {
 }
 
 class OrderService {
+  /** Returns all orders for the admin order-management view. */
   async getAll(): Promise<IOrder[]> {
     return await OrderRepository.findAll();
   }
 
+  /** Returns one order by database identifier or throws a not-found error. */
   async getById(id: string): Promise<IOrder> {
     const order = await OrderRepository.findById(id);
     if (!order) throw Object.assign(new Error('Order not found'), { statusCode: 404 });
     return order;
   }
 
+  /** Validates stock, reserves it atomically, and creates the order plus invoice snapshot. */
   async create(data: CreateOrderData): Promise<{ order: IOrder; invoice: IInvoice }> {
     const user = await UserRepository.findById(data.userId);
     if (!user) throw Object.assign(new Error('User not found'), { statusCode: 404 });
@@ -68,6 +71,17 @@ class OrderService {
           new Error(`Insufficient stock for "${product.name}". Available: ${product.unitsInStock}`),
           { statusCode: 400 }
         );
+      }
+    }
+
+    const requestedByProduct = new Map<string, number>();
+    for (const item of data.items) {
+      requestedByProduct.set(item.enum.toLowerCase(), (requestedByProduct.get(item.enum.toLowerCase()) ?? 0) + item.unit);
+    }
+    for (const [itemEnum, quantity] of requestedByProduct) {
+      const updated = await ProductRepository.deductStock(itemEnum, quantity);
+      if (!updated) {
+        throw Object.assign(new Error(`Insufficient stock for "${itemEnum}"`), { statusCode: 400 });
       }
     }
 
@@ -92,19 +106,10 @@ class OrderService {
       invoiceLink: data.invoiceLink ?? '',
     });
 
-    // Deduct stock
-    await Promise.all(
-      data.items.map((item) => {
-        const product = productMap.get(item.enum.toLowerCase())!;
-        return ProductRepository.updateByEnum(item.enum, {
-          unitsInStock: product.unitsInStock - item.unit,
-        });
-      })
-    );
-
     return { order, invoice };
   }
 
+  /** Updates an order and mirrors supported changes to its invoice snapshot. */
   async update(
     orderId: string,
     data: UpdateOrderData

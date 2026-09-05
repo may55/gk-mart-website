@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { adminFetch } from "../../lib/admin-api";
+import { adminFetch, adminUpload } from "../../lib/admin-api";
 import { Loader2, CheckCircle2, ChevronDown, EyeOff } from "lucide-react";
+import { calculateDiscountPercent } from "../../../lib/pricing";
 
 interface Product {
   _id: string;
   name: string;
-  volume: string;
+  sku: string;
   enum: string;
   sellingPrice: number;
   marketPrice: number;
@@ -21,7 +22,7 @@ interface Props {
 }
 
 const EMPTY_NEW = {
-  volume: "",
+  sku: "",
   sellingPrice: "",
   marketPrice: "",
 };
@@ -38,7 +39,9 @@ export function InventoryAddForm({ onAdded }: Props) {
   const [units, setUnits] = useState("");
   const [totalCost, setTotalCost] = useState("");
   const [vendor, setVendor] = useState("");
-  const [expiry, setExpiry] = useState("");
+  const [expiryMonth, setExpiryMonth] = useState("");
+  const [expiryYear, setExpiryYear] = useState("");
+  const [billImage, setBillImage] = useState<File | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -66,7 +69,11 @@ export function InventoryAddForm({ onAdded }: Props) {
   const suggestions =
     query.trim().length > 0
       ? allProducts
-          .filter((p) => `${p.name} ${p.volume}`.toLowerCase().includes(query.toLowerCase()))
+          .filter((p) =>
+            `${p.name} ${p.sku} ${p.marketPrice} ${p.enum}`
+              .toLowerCase()
+              .includes(query.toLowerCase()),
+          )
           .slice(0, 8)
       : [];
 
@@ -74,7 +81,7 @@ export function InventoryAddForm({ onAdded }: Props) {
     setSelected(p);
     setIsNewProduct(false);
     setMakeVisible(false);
-    setQuery(`${p.name} · ${p.volume}`);
+    setQuery(`${p.name} · ${p.sku} · ₹${p.marketPrice}`);
     setShowDropdown(false);
     setTimeout(() => unitsRef.current?.focus(), 50);
   };
@@ -100,7 +107,9 @@ export function InventoryAddForm({ onAdded }: Props) {
     setUnits("");
     setTotalCost("");
     setVendor("");
-    setExpiry("");
+    setExpiryMonth("");
+    setExpiryYear("");
+    setBillImage(null);
     setMakeVisible(false);
     setError(null);
     setSuccess(false);
@@ -110,11 +119,7 @@ export function InventoryAddForm({ onAdded }: Props) {
   const afterStock = selected ? selected.unitsInStock + unitsNum : unitsNum;
   const sellingPrice = selected ? selected.sellingPrice : parseFloat(newFields.sellingPrice) || 0;
   const marketPrice = selected ? selected.marketPrice : parseFloat(newFields.marketPrice) || 0;
-  const discountPct =
-    marketPrice > 0 ? Math.round(((marketPrice - sellingPrice) / marketPrice) * 100) : 0;
-
-  const buildEnum = (name: string, volume: string) =>
-    `${name}_${volume}`.toLowerCase().replace(/\s+/g, "_");
+  const discountPct = calculateDiscountPercent(sellingPrice, marketPrice);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,8 +147,8 @@ export function InventoryAddForm({ onAdded }: Props) {
         setError("Product name is required.");
         return;
       }
-      if (!newFields.volume.trim()) {
-        setError("Size / volume is required.");
+      if (!newFields.sku.trim()) {
+        setError("SKU is required.");
         return;
       }
       if (!newFields.sellingPrice) {
@@ -165,9 +170,11 @@ export function InventoryAddForm({ onAdded }: Props) {
           method: "POST",
           body: JSON.stringify({
             name: query.trim(),
-            volume: newFields.volume.trim(),
+            sku: newFields.sku.trim(),
             sellingPrice: parseFloat(newFields.sellingPrice),
             marketPrice: parseFloat(newFields.marketPrice),
+            ...(expiryMonth ? { expiryMonth: parseInt(expiryMonth, 10) } : {}),
+            ...(expiryYear ? { expiryYear: parseInt(expiryYear, 10) } : {}),
             isVisible: true,
           }),
         });
@@ -182,16 +189,13 @@ export function InventoryAddForm({ onAdded }: Props) {
         }
       }
 
-      await adminFetch("/inventory", {
-        method: "POST",
-        body: JSON.stringify({
-          itemEnum: targetEnum,
-          numberOfUnits: parseInt(units),
-          totalCostPrice: parseFloat(totalCost),
-          vendorName: vendor.trim(),
-          ...(expiry ? { expiryDate: expiry } : {}),
-        }),
-      });
+      const formData = new FormData();
+      formData.append("itemEnum", targetEnum);
+      formData.append("numberOfUnits", String(parseInt(units)));
+      formData.append("totalCostPrice", String(parseFloat(totalCost)));
+      formData.append("vendorName", vendor.trim());
+      if (billImage) formData.append("billImage", billImage);
+      await adminUpload("/inventory", formData);
 
       setSuccess(true);
       onAdded();
@@ -245,7 +249,7 @@ export function InventoryAddForm({ onAdded }: Props) {
                 >
                   <span className="font-medium text-foreground">{p.name}</span>
                   <span className="ml-2 shrink-0 text-xs text-muted-foreground">
-                    {p.volume} · {p.unitsInStock} in stock
+                    {p.sku} · ₹{p.marketPrice} · {p.unitsInStock} in stock
                   </span>
                 </button>
               ))}
@@ -270,19 +274,14 @@ export function InventoryAddForm({ onAdded }: Props) {
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Size / Volume</label>
+              <label className="text-sm font-medium text-foreground">SKU</label>
               <input
                 type="text"
-                value={newFields.volume}
-                onChange={(e) => setNewFields((p) => ({ ...p, volume: e.target.value }))}
-                placeholder="e.g. 500ml, 1kg"
+                value={newFields.sku}
+                onChange={(e) => setNewFields((p) => ({ ...p, sku: e.target.value }))}
+                placeholder="e.g. RICE-001"
                 className={inputCls}
               />
-              {newFields.volume && query && (
-                <p className="text-xs text-muted-foreground">
-                  ID: <span className="font-mono">{buildEnum(query, newFields.volume)}</span>
-                </p>
-              )}
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">MRP (₹)</label>
@@ -315,6 +314,30 @@ export function InventoryAddForm({ onAdded }: Props) {
                 </span>
               )}
             </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Expiry Month (optional)</label>
+              <input
+                type="number"
+                min="1"
+                max="12"
+                value={expiryMonth}
+                onChange={(e) => setExpiryMonth(e.target.value)}
+                placeholder="1–12"
+                className={inputCls}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Expiry Year (optional)</label>
+              <input
+                type="number"
+                min="2000"
+                max="3000"
+                value={expiryYear}
+                onChange={(e) => setExpiryYear(e.target.value)}
+                placeholder="2027"
+                className={inputCls}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -323,8 +346,8 @@ export function InventoryAddForm({ onAdded }: Props) {
       {selected && (
         <div className="flex items-center gap-6 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm">
           <div>
-            <p className="text-xs text-muted-foreground">Size</p>
-            <p className="font-medium">{selected.volume}</p>
+            <p className="text-xs text-muted-foreground">SKU</p>
+            <p className="font-medium">{selected.sku}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Selling Price</p>
@@ -412,13 +435,11 @@ export function InventoryAddForm({ onAdded }: Props) {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Expiry Date <span className="font-normal text-muted-foreground">(optional)</span>
-            </label>
+            <label className="text-sm font-medium text-foreground">Bill image (optional)</label>
             <input
-              type="date"
-              value={expiry}
-              onChange={(e) => setExpiry(e.target.value)}
+              type="file"
+              accept="image/*"
+              onChange={(e) => setBillImage(e.target.files?.[0] ?? null)}
               className={inputCls}
             />
           </div>

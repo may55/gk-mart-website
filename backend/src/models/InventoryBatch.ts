@@ -6,7 +6,7 @@ export interface IInventoryBatch extends Document {
   numberOfUnits: number;
   totalCostPrice: number;
   vendorName: string;
-  expiryDate?: Date;
+  billImage?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,9 +38,7 @@ const InventoryBatchSchema = new Schema<IInventoryBatch>(
       required: [true, 'Vendor name is required'],
       trim: true,
     },
-    expiryDate: {
-      type: Date,
-    },
+    billImage: { type: String, trim: true },
   },
   { timestamps: true }
 );

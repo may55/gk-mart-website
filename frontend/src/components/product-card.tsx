@@ -1,22 +1,18 @@
 import { Plus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { useCart, formatPrice, type CartItem } from "@/lib/cart";
+import { useCart, type CartItem } from "@/lib/cart";
+import { calculateDiscountPercent, formatPrice } from "@/lib/pricing";
 import type { Product } from "@/lib/types";
-
-function offPercent(selling: number, market: number): number {
-  if (market <= 0 || selling >= market) return 0;
-  return Math.round(((market - selling) / market) * 100);
-}
 
 export function ProductCard({ product }: { product: Product }) {
   const { items, add } = useCart();
   const inCart = items.find((i) => i.productEnum === product.enum);
-  const off = offPercent(product.sellingPrice, product.marketPrice);
+  const off = calculateDiscountPercent(product.sellingPrice, product.marketPrice);
 
   const cartProduct: Omit<CartItem, "quantity"> = {
     productEnum: product.enum,
     name: product.name,
-    volume: product.volume,
+    sku: product.sku,
     sellingPrice: product.sellingPrice,
     marketPrice: product.marketPrice,
     image: product.images[0] ?? "",
@@ -48,7 +44,7 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
         <div className="mt-3 flex min-w-0 flex-col gap-0.5">
           <h3 className="truncate text-sm font-semibold text-foreground">{product.name}</h3>
-          <p className="text-xs text-muted-foreground">{product.volume}</p>
+          <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
         </div>
         <div className="mt-1.5 flex items-baseline gap-1.5">
           <span className="text-base font-bold text-foreground">

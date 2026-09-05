@@ -50,6 +50,26 @@ export const uploadItemImage = async (
   return resolveImageUrl(bucket, key);
 };
 
+export const uploadInventoryBill = async (
+  itemEnum: string,
+  fileBuffer: Buffer,
+  mimeType: string
+): Promise<string> => {
+  const s3 = getS3Client();
+  const bucket = getBucket();
+  const ext = mimeType.split('/')[1] ?? 'jpg';
+  const key = `inventory/${itemEnum}/bill_${Date.now()}.${ext}`;
+  await s3.send(new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    Body: fileBuffer,
+    ContentType: mimeType,
+    CacheControl: 'private, max-age=31536000',
+    ACL: 'public-read',
+  }));
+  return resolveImageUrl(bucket, key);
+};
+
 export const deleteItemImage = async (imageUrl: string): Promise<void> => {
   const s3 = getS3Client();
   const bucket = getBucket();

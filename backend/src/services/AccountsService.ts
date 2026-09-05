@@ -1,6 +1,8 @@
 import OrderRepository from '../repositories/OrderRepository';
 import InvoiceRepository from '../repositories/InvoiceRepository';
 import { IInvoice } from '../models/Invoice';
+import { endOfDay, startOfDay, startOfMonth, startOfWeekMonday } from '../utils/dates';
+import { calculateInvoiceProfit } from '../utils/profit';
 
 interface AccountsSummary {
   todaySales: number;
@@ -11,19 +13,8 @@ interface AccountsSummary {
   invoices: IInvoice[];
 }
 
-const startOfDay = (d: Date): Date => {
-  const r = new Date(d);
-  r.setHours(0, 0, 0, 0);
-  return r;
-};
-
-const endOfDay = (d: Date): Date => {
-  const r = new Date(d);
-  r.setHours(23, 59, 59, 999);
-  return r;
-};
-
 class AccountsService {
+  /** Builds the admin sales dashboard summary for today, this week, and this month. */
   async getSummary(): Promise<AccountsSummary> {
     const now = new Date();
 
@@ -42,10 +33,7 @@ class AccountsService {
     );
 
     // Delivered this week (Mon–Sun)
-    const dayOfWeek = now.getDay();
-    const diffToMonday = (dayOfWeek + 6) % 7;
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - diffToMonday);
+    const weekStart = startOfWeekMonday(now);
     const deliveredThisWeek = await OrderRepository.sumTotalAmountByDateRange(
       'deliveredAt',
       startOfDay(weekStart),
@@ -53,7 +41,7 @@ class AccountsService {
     );
 
     // Delivered this month
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthStart = startOfMonth(now);
     const deliveredThisMonth = await OrderRepository.sumTotalAmountByDateRange(
       'deliveredAt',
       startOfDay(monthStart),
@@ -62,17 +50,7 @@ class AccountsService {
 
     const invoices = await InvoiceRepository.findAll();
 
-    const totalProfit = Math.round(
-      invoices.reduce(
-        (sum, inv) =>
-          sum +
-          inv.items.reduce(
-            (s, item) => s + (item.sellingPrice - item.costPrice) * item.unit,
-            0
-          ),
-        0
-      ) * 100
-    ) / 100;
+    const totalProfit = calculateInvoiceProfit(invoices.flatMap((invoice) => invoice.items));
 
     return {
       todaySales,

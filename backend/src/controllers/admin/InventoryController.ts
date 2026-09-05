@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import InventoryService from '../../services/InventoryService';
 import { validateInventoryBatchCreate } from '../../validators/admin';
 import { AdminRequest } from '../../middleware/adminAuth';
+import { uploadInventoryBill } from '../../lib/s3';
 
 class InventoryController {
   async getAll(req: AdminRequest, res: Response, next: NextFunction): Promise<void> {
@@ -53,7 +54,11 @@ class InventoryController {
         });
         return;
       }
-      const batch = await InventoryService.createBatch(value);
+      const file = req.file as Express.Multer.File | undefined;
+      const batch = await InventoryService.createBatch({
+        ...value,
+        ...(file ? { billImage: await uploadInventoryBill(value.itemEnum, file.buffer, file.mimetype) } : {}),
+      });
       res.status(201).json({ success: true, message: 'Inventory batch created', data: batch });
     } catch (error) {
       next(error);

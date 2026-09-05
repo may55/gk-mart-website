@@ -20,16 +20,19 @@ interface UpdateUserData {
 }
 
 class AdminUserService {
+  /** Returns all users for administrative management. */
   async getAll(): Promise<IUser[]> {
     return await UserRepository.findAll();
   }
 
+  /** Returns one user by id or throws a not-found error. */
   async getById(id: string): Promise<IUser> {
     const user = await UserRepository.findById(id);
     if (!user) throw Object.assign(new Error('User not found'), { statusCode: 404 });
     return user;
   }
 
+  /** Creates an administrative user record. */
   async create(data: CreateUserData): Promise<IUser> {
     const existingEmail = await UserRepository.findByEmail(data.email);
     if (existingEmail) throw new Error('Email already registered');
@@ -48,6 +51,7 @@ class AdminUserService {
     });
   }
 
+  /** Updates an administrative user record. */
   async update(id: string, data: UpdateUserData): Promise<IUser> {
     const user = await UserRepository.updateUser(id, data);
     if (!user) throw Object.assign(new Error('User not found'), { statusCode: 404 });

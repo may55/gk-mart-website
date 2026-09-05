@@ -26,6 +26,7 @@ interface AuthResponse {
 }
 
 class AuthService {
+  /** Validates uniqueness, hashes credentials, creates a user, and returns a session token. */
   async signup(data: SignupData): Promise<AuthResponse> {
     // Check if user already exists by email
     const existingEmail = await UserRepository.findByEmail(data.email);
@@ -65,6 +66,7 @@ class AuthService {
     };
   }
 
+  /** Finds a user by email/phone, verifies the password, and returns a session token. */
   async login(data: LoginData): Promise<AuthResponse> {
     const { identifier, password } = data;
 

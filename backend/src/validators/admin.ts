@@ -12,24 +12,24 @@ const adminLoginSchema = Joi.object({
 
 const productCreateSchema = Joi.object({
   name: Joi.string().required().trim().min(1).max(100),
-  volume: Joi.string().required().trim().min(1).max(50),
+  sku: Joi.string().required().trim().min(1).max(100),
   barcode: Joi.string().trim().optional(),
   sellingPrice: Joi.number().required().min(0),
   marketPrice: Joi.number().required().min(0),
-  unitsInStock: Joi.number().min(0).default(0),
-  averageCostPrice: Joi.number().min(0).default(0),
+  expiryMonth: Joi.number().integer().min(1).max(12).optional(),
+  expiryYear: Joi.number().integer().min(2000).max(3000).optional(),
   categories: Joi.array().items(Joi.string().trim()).default([]),
   isVisible: Joi.boolean().default(true),
 });
 
 const productUpdateSchema = Joi.object({
   name: Joi.string().trim().min(1).max(100),
-  volume: Joi.string().trim().min(1).max(50),
+  sku: Joi.string().trim().min(1).max(100),
   barcode: Joi.string().trim().optional(),
   sellingPrice: Joi.number().min(0),
   marketPrice: Joi.number().min(0),
-  unitsInStock: Joi.number().min(0),
-  averageCostPrice: Joi.number().min(0),
+  expiryMonth: Joi.number().integer().min(1).max(12).optional(),
+  expiryYear: Joi.number().integer().min(2000).max(3000).optional(),
   categories: Joi.array().items(Joi.string().trim()),
   isVisible: Joi.boolean(),
 });
@@ -39,7 +39,6 @@ const inventoryBatchCreateSchema = Joi.object({
   numberOfUnits: Joi.number().required().min(1),
   totalCostPrice: Joi.number().required().min(0),
   vendorName: Joi.string().required().trim().min(1),
-  expiryDate: Joi.date().optional(),
 });
 
 const orderItemSchema = Joi.object({

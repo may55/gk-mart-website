@@ -11,16 +11,19 @@ interface PopulatedUserNotification {
 }
 
 class NotificationService {
+  /** Publishes a notification for users to receive. */
   async publish(text: string): Promise<INotification> {
     const notification = await NotificationRepository.create(text);
     await UserRepository.pushNotificationToAllUsers(notification._id as Types.ObjectId);
     return notification;
   }
 
+  /** Lists all published notifications. */
   async listAll(): Promise<INotification[]> {
     return await NotificationRepository.findAll();
   }
 
+  /** Returns notifications addressed to one user with their read state. */
   async getUserNotifications(userId: string): Promise<PopulatedUserNotification[]> {
     const user = await UserRepository.getUserNotifications(userId);
     if (!user) return [];
@@ -29,6 +32,7 @@ class NotificationService {
     );
   }
 
+  /** Marks one user's notification as read. */
   async markRead(userId: string, notificationId: string): Promise<void> {
     await UserRepository.markNotificationRead(userId, notificationId);
   }

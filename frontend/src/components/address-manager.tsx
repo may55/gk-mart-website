@@ -1,12 +1,20 @@
 import { useState } from "react";
 import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-import { formatPrice } from "@/lib/cart";
+import { formatPrice } from "@/lib/pricing";
 import type { Address } from "@/lib/types";
 
 export type AddrScreen = "list" | "form";
 
-const EMPTY_FORM: Address = { label: "", line1: "", line2: "", pincode: "", city: "", state: "", phone: "" };
+const EMPTY_FORM: Address = {
+  label: "",
+  line1: "",
+  line2: "",
+  pincode: "",
+  city: "",
+  state: "",
+  phone: "",
+};
 
 // ─── AddressManager ───────────────────────────────────────────────────────────
 // Handles the full list→form→save flow. Used from both Cart and Profile.
@@ -42,7 +50,7 @@ export function AddressManager({
           const res = await apiFetch<{ data: Address[] }>(
             url,
             { method, body: JSON.stringify(data) },
-            token
+            token,
           );
           onAddressesChange(res.data);
           setSubScreen("list");
@@ -68,7 +76,10 @@ export function AddressManager({
             </div>
             <button
               type="button"
-              onClick={() => { setEditIndex(null); setSubScreen("form"); }}
+              onClick={() => {
+                setEditIndex(null);
+                setSubScreen("form");
+              }}
               className="rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
             >
               + Add address
@@ -92,7 +103,10 @@ export function AddressManager({
               </div>
               <button
                 type="button"
-                onClick={() => { setEditIndex(null); setSubScreen("form"); }}
+                onClick={() => {
+                  setEditIndex(null);
+                  setSubScreen("form");
+                }}
                 className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-[var(--shadow-float)]"
               >
                 + Add address
@@ -110,7 +124,9 @@ export function AddressManager({
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <div className="min-w-0 text-sm leading-snug">
                         {addr.label && (
-                          <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-primary">{addr.label}</p>
+                          <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-primary">
+                            {addr.label}
+                          </p>
                         )}
                         <p className="font-semibold">{addr.line1}</p>
                         {addr.line2 && <p className="text-muted-foreground">{addr.line2}</p>}
@@ -122,7 +138,10 @@ export function AddressManager({
                     </div>
                     <button
                       type="button"
-                      onClick={() => { setEditIndex(i); setSubScreen("form"); }}
+                      onClick={() => {
+                        setEditIndex(i);
+                        setSubScreen("form");
+                      }}
                       className="shrink-0 rounded-full border border-border px-3 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
                     >
                       Update
@@ -131,7 +150,7 @@ export function AddressManager({
                   {total !== undefined && (
                     <button
                       type="button"
-                      onClick={() => onSelect ? onSelect(addr) : undefined}
+                      onClick={() => (onSelect ? onSelect(addr) : undefined)}
                       className="mt-3 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground active:scale-[0.98]"
                     >
                       Deliver here · {formatPrice(total)}
@@ -178,7 +197,11 @@ export function AddressForm({
   const handleSave = async () => {
     if (!validate()) return;
     setSaving(true);
-    try { await onSave(form); } catch { setSaving(false); }
+    try {
+      await onSave(form);
+    } catch {
+      setSaving(false);
+    }
   };
 
   return (
@@ -230,8 +253,20 @@ export function AddressForm({
               error={errors.pincode}
             />
             <div className="grid grid-cols-2 gap-3">
-              <Field label="City *" value={form.city} onChange={set("city")} placeholder="City" error={errors.city} />
-              <Field label="State *" value={form.state} onChange={set("state")} placeholder="State" error={errors.state} />
+              <Field
+                label="City *"
+                value={form.city}
+                onChange={set("city")}
+                placeholder="City"
+                error={errors.city}
+              />
+              <Field
+                label="State *"
+                value={form.state}
+                onChange={set("state")}
+                placeholder="State"
+                error={errors.state}
+              />
             </div>
             <Field
               label="Delivery phone *"
@@ -260,7 +295,13 @@ export function AddressForm({
 
 // ─── Field ────────────────────────────────────────────────────────────────────
 function Field({
-  label, value, onChange, placeholder, error, inputMode, maxLength,
+  label,
+  value,
+  onChange,
+  placeholder,
+  error,
+  inputMode,
+  maxLength,
 }: {
   label: string;
   value: string;

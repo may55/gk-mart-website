@@ -9,7 +9,7 @@ export interface InventoryBatch {
   numberOfUnits: number;
   totalCostPrice: number;
   vendorName: string;
-  expiryDate?: string;
+  billImage?: string;
   createdAt: string;
 }
 
@@ -35,15 +35,27 @@ export function InventoryBatchTable({ batches, showProduct = false, onUpdated }:
     setEditing({ id: b._id, units: String(b.numberOfUnits), totalCost: String(b.totalCostPrice) });
   };
 
-  const cancelEdit = () => { setEditing(null); setError(null); };
+  const cancelEdit = () => {
+    setEditing(null);
+    setError(null);
+  };
 
   const saveEdit = async (b: InventoryBatch) => {
     if (!editing) return;
     const units = parseInt(editing.units);
     const cost = parseFloat(editing.totalCost);
-    if (!Number.isInteger(units) || units < 1) { setError("Units must be a positive integer."); return; }
-    if (isNaN(cost) || cost < 0) { setError("Cost must be non-negative."); return; }
-    if (units === b.numberOfUnits && cost === b.totalCostPrice) { cancelEdit(); return; }
+    if (!Number.isInteger(units) || units < 1) {
+      setError("Units must be a positive integer.");
+      return;
+    }
+    if (isNaN(cost) || cost < 0) {
+      setError("Cost must be non-negative.");
+      return;
+    }
+    if (units === b.numberOfUnits && cost === b.totalCostPrice) {
+      cancelEdit();
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -82,7 +94,7 @@ export function InventoryBatchTable({ batches, showProduct = false, onUpdated }:
             <th className="px-4 py-3 text-right">Units</th>
             <th className="px-4 py-3 text-right">Total Cost</th>
             <th className="px-4 py-3 text-right">Cost / Unit</th>
-            <th className="px-4 py-3">Expiry</th>
+            <th className="px-4 py-3">Bill</th>
             <th className="px-4 py-3">Date</th>
             <th className="px-4 py-3" />
           </tr>
@@ -97,15 +109,17 @@ export function InventoryBatchTable({ batches, showProduct = false, onUpdated }:
           )}
           {batches.map((b) => {
             const isEditingThis = editing?.id === b._id;
-            const expiry = b.expiryDate ? new Date(b.expiryDate) : null;
-            const daysLeft = expiry ? Math.ceil((expiry.getTime() - Date.now()) / 86400000) : null;
             const displayUnits = isEditingThis ? parseInt(editing.units) || 0 : b.numberOfUnits;
-            const displayCost = isEditingThis ? parseFloat(editing.totalCost) || 0 : b.totalCostPrice;
+            const displayCost = isEditingThis
+              ? parseFloat(editing.totalCost) || 0
+              : b.totalCostPrice;
 
             return (
               <tr key={b._id} className={isEditingThis ? "bg-muted/40" : "hover:bg-muted/30"}>
                 {showProduct && (
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{b.itemEnum}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                    {b.itemEnum}
+                  </td>
                 )}
                 <td className="px-4 py-3 font-medium">#{b.inventoryBatch}</td>
                 <td className="px-4 py-3 text-muted-foreground">{b.vendorName}</td>
@@ -147,18 +161,15 @@ export function InventoryBatchTable({ batches, showProduct = false, onUpdated }:
                 </td>
 
                 <td className="px-4 py-3">
-                  {expiry ? (
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        daysLeft! < 0
-                          ? "bg-destructive/15 text-destructive"
-                          : daysLeft! <= 30
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+                  {b.billImage ? (
+                    <a
+                      href={b.billImage}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary hover:underline"
                     >
-                      {daysLeft! < 0 ? "Expired" : daysLeft === 0 ? "Today" : `${daysLeft}d`}
-                    </span>
+                      View bill
+                    </a>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
@@ -182,7 +193,11 @@ export function InventoryBatchTable({ batches, showProduct = false, onUpdated }:
                         disabled={saving}
                         className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                       >
-                        {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                        {saving ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Check className="h-3 w-3" />
+                        )}
                         Save
                       </button>
                       <button

@@ -17,6 +17,7 @@ interface AdminAuthResponse {
 }
 
 class AdminAuthService {
+  /** Authenticates an admin account and returns an admin session token. */
   async login(data: AdminLoginData): Promise<AdminAuthResponse> {
     const user = await UserRepository.findByEmailWithPassword(data.email);
 

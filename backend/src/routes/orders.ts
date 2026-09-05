@@ -29,6 +29,10 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => 
       res.status(400).json({ success: false, message: 'items are required' });
       return;
     }
+    if (items.some((item) => !Number.isInteger(item.quantity) || item.quantity < 1)) {
+      res.status(400).json({ success: false, message: 'Each quantity must be a positive integer' });
+      return;
+    }
     if (!address?.line1) {
       res.status(400).json({ success: false, message: 'address is required' });
       return;
@@ -55,14 +59,29 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => 
       };
     });
 
-    // Validate stock
+    const requestedByProduct = new Map<string, number>();
     for (const { productEnum, quantity } of items) {
+      const key = productEnum.toLowerCase();
+      requestedByProduct.set(key, (requestedByProduct.get(key) ?? 0) + quantity);
+    }
+
+    // Validate stock against the total requested quantity per product.
+    for (const [productEnum, quantity] of requestedByProduct) {
       const product = productMap.get(productEnum.toLowerCase());
       if (product && product.unitsInStock < quantity) {
         res.status(400).json({
           success: false,
           message: `Insufficient stock for "${product.name}". Available: ${product.unitsInStock}`,
         });
+        return;
+      }
+    }
+
+    // Reserve stock atomically before creating the order.
+    for (const [productEnum, quantity] of requestedByProduct) {
+      const updated = await ProductRepository.deductStock(productEnum, quantity);
+      if (!updated) {
+        res.status(400).json({ success: false, message: `Insufficient stock for ${productEnum}` });
         return;
       }
     }
@@ -101,16 +120,6 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => 
       items: orderItems,
       invoiceLink: '',
     });
-
-    // Deduct stock
-    await Promise.all(
-      items.map(({ productEnum, quantity }) => {
-        const product = productMap.get(productEnum.toLowerCase())!;
-        return ProductRepository.updateByEnum(productEnum, {
-          unitsInStock: product.unitsInStock - quantity,
-        });
-      })
-    );
 
     res.status(201).json({ success: true, data: order });
   } catch (err) {

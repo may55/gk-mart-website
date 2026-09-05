@@ -4,9 +4,11 @@ export interface Product {
   _id: string;
   enum: string;
   name: string;
-  volume: string;
+  sku: string;
   sellingPrice: number;
   marketPrice: number;
+  expiryMonth?: number;
+  expiryYear?: number;
   unitsInStock: number;
   averageCostPrice: number;
   images: string[];
@@ -21,6 +23,7 @@ export interface InventoryBatch {
   numberOfUnits: number;
   totalCostPrice: number;
   vendorName: string;
+  billImage?: string;
   createdAt: string;
 }
 
@@ -50,6 +53,7 @@ export interface OrderItem {
   unit: number;
   sellingPrice: number;
   mrp: number;
+  costPrice?: number;
 }
 
 export interface Order {

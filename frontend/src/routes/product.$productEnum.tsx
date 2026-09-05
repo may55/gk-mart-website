@@ -2,17 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Plus, Check, Minus } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-import { useCart, formatPrice, type CartItem } from "@/lib/cart";
+import { useCart, type CartItem } from "@/lib/cart";
+import { calculateDiscountPercent, formatPrice } from "@/lib/pricing";
 import type { Product } from "@/lib/types";
 
 export const Route = createFileRoute("/product/$productEnum")({
   component: ProductDetailPage,
 });
-
-function offPercent(selling: number, market: number): number {
-  if (market <= 0 || selling >= market) return 0;
-  return Math.round(((market - selling) / market) * 100);
-}
 
 function ProductDetailPage() {
   const { productEnum } = Route.useParams();
@@ -53,13 +49,13 @@ function ProductDetailPage() {
   }
 
   const cartItem = items.find((i) => i.productEnum === product.enum);
-  const off = offPercent(product.sellingPrice, product.marketPrice);
+  const off = calculateDiscountPercent(product.sellingPrice, product.marketPrice);
   const images = product.images.length > 0 ? product.images : [""];
 
   const cartProduct: Omit<CartItem, "quantity"> = {
     productEnum: product.enum,
     name: product.name,
-    volume: product.volume,
+    sku: product.sku,
     sellingPrice: product.sellingPrice,
     marketPrice: product.marketPrice,
     image: product.images[0] ?? "",
@@ -79,11 +75,7 @@ function ProductDetailPage() {
         {/* Image carousel */}
         <div className="relative aspect-square w-full overflow-hidden bg-muted">
           {images[imgIndex] ? (
-            <img
-              src={images[imgIndex]}
-              alt={product.name}
-              className="h-full w-full object-cover"
-            />
+            <img src={images[imgIndex]} alt={product.name} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-6xl">🛒</div>
           )}
@@ -137,7 +129,7 @@ function ProductDetailPage() {
           <h1 className="mt-2 text-xl font-extrabold leading-tight tracking-tight">
             {product.name}
           </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">{product.volume}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">SKU: {product.sku}</p>
 
           {/* Price */}
           <div className="mt-4 flex items-end gap-3">
@@ -166,9 +158,7 @@ function ProductDetailPage() {
 
           {/* Stock */}
           <p className="text-xs text-muted-foreground">
-            {product.unitsInStock > 0
-              ? `${product.unitsInStock} units in stock`
-              : "Out of stock"}
+            {product.unitsInStock > 0 ? `${product.unitsInStock} units in stock` : "Out of stock"}
           </p>
         </div>
 

@@ -2,13 +2,25 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { adminFetch } from "../../../admin/lib/admin-api";
 import { ProductForm } from "../../../admin/components/products/product-form";
-import { InventoryBatchTable, type InventoryBatch } from "../../../admin/components/inventory/inventory-batch-table";
-import { ArrowLeft, Loader2, AlertCircle, Package, TrendingUp, Boxes, PackagePlus } from "lucide-react";
+import { ProductImageManager } from "../../../admin/components/products/product-image-manager";
+import {
+  InventoryBatchTable,
+  type InventoryBatch,
+} from "../../../admin/components/inventory/inventory-batch-table";
+import {
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
+  Package,
+  TrendingUp,
+  Boxes,
+  PackagePlus,
+} from "lucide-react";
 
 interface Product {
   _id: string;
   name: string;
-  volume: string;
+  sku: string;
   enum: string;
   barcode?: string;
   sellingPrice: number;
@@ -51,7 +63,9 @@ function ProductDetailPage() {
     }
   };
 
-  useEffect(() => { load(); }, [productEnum]);
+  useEffect(() => {
+    load();
+  }, [productEnum]);
 
   if (isLoading) {
     return (
@@ -91,7 +105,7 @@ function ProductDetailPage() {
         <div className="h-4 w-px bg-border" />
         <div>
           <h1 className="text-xl font-semibold text-foreground">{product.name}</h1>
-          <p className="text-sm text-muted-foreground">{product.volume}</p>
+          <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
         </div>
         {!product.isVisible && (
           <span className="ml-auto rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
@@ -115,7 +129,9 @@ function ProductDetailPage() {
             <Package className="h-4 w-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Avg Cost</span>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold text-foreground">₹{product.averageCostPrice.toFixed(2)}</p>
+          <p className="mt-1.5 text-2xl font-semibold text-foreground">
+            ₹{product.averageCostPrice.toFixed(2)}
+          </p>
           <p className="text-xs text-muted-foreground">weighted average</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
@@ -123,10 +139,14 @@ function ProductDetailPage() {
             <TrendingUp className="h-4 w-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Margin</span>
           </div>
-          <p className={`mt-1.5 text-2xl font-semibold ${margin !== null && margin >= 0 ? "text-green-600" : "text-destructive"}`}>
+          <p
+            className={`mt-1.5 text-2xl font-semibold ${margin !== null && margin >= 0 ? "text-green-600" : "text-destructive"}`}
+          >
             {margin !== null ? `${margin.toFixed(1)}%` : "—"}
           </p>
-          <p className="text-xs text-muted-foreground">sell ₹{product.sellingPrice} / cost ₹{product.averageCostPrice.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground">
+            sell ₹{product.sellingPrice} / cost ₹{product.averageCostPrice.toFixed(2)}
+          </p>
         </div>
       </div>
 
@@ -137,6 +157,15 @@ function ProductDetailPage() {
           <span className="font-mono text-muted-foreground">{product.barcode}</span>
         </div>
       )}
+
+      {/* Images */}
+      <div className="rounded-xl border border-border bg-card p-4">
+        <ProductImageManager
+          productEnum={product.enum}
+          images={product.images}
+          onChanged={(images) => setProduct((p) => (p ? { ...p, images } : p))}
+        />
+      </div>
 
       {/* Edit + Add Inventory actions */}
       <div className="flex items-center justify-between">
@@ -168,7 +197,10 @@ function ProductDetailPage() {
         <ProductForm
           product={product}
           onClose={() => setShowEditForm(false)}
-          onSaved={() => { setShowEditForm(false); load(); }}
+          onSaved={() => {
+            setShowEditForm(false);
+            load();
+          }}
         />
       )}
     </div>

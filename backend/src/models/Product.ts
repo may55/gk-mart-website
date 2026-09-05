@@ -2,11 +2,13 @@ import { Schema, model, Document } from 'mongoose';
 
 export interface IProduct extends Document {
   name: string;
-  volume: string;
+  sku: string;
   enum: string;
   barcode?: string;
   sellingPrice: number;
   marketPrice: number;
+  expiryMonth?: number;
+  expiryYear?: number;
   unitsInStock: number;
   averageCostPrice: number;
   images: string[];
@@ -23,10 +25,11 @@ const ProductSchema = new Schema<IProduct>(
       required: [true, 'Name is required'],
       trim: true,
     },
-    volume: {
+    sku: {
       type: String,
-      required: [true, 'Volume is required'],
+      required: [true, 'SKU is required'],
       trim: true,
+      uppercase: true,
     },
     enum: {
       type: String,
@@ -34,7 +37,6 @@ const ProductSchema = new Schema<IProduct>(
       unique: true,
       trim: true,
       lowercase: true,
-      immutable: true,
     },
     barcode: {
       type: String,
@@ -51,6 +53,8 @@ const ProductSchema = new Schema<IProduct>(
       required: [true, 'Market price is required'],
       min: [0, 'Market price cannot be negative'],
     },
+    expiryMonth: { type: Number, min: 1, max: 12 },
+    expiryYear: { type: Number, min: 2000, max: 3000 },
     unitsInStock: {
       type: Number,
       default: 0,

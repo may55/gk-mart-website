@@ -9,13 +9,14 @@ import {
   type ReactNode,
 } from "react";
 import { apiFetch } from "./api";
+import { calculateLineSavings } from "./pricing";
 
 export type CartItem = {
   productEnum: string;
   quantity: number;
   // display snapshot
   name: string;
-  volume: string;
+  sku: string;
   sellingPrice: number;
   marketPrice: number;
   image: string;
@@ -56,7 +57,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setItems(JSON.parse(raw) as CartItem[]);
-    } catch {}
+    } catch {
+      // Ignore malformed local cart data and start empty.
+    }
     setHydrated(true);
   }, []);
 
@@ -65,7 +68,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch {}
+    } catch {
+      // Ignore localStorage failures in restricted browser contexts.
+    }
 
     const token = getToken();
     if (!token) return;
@@ -74,7 +79,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     syncTimer.current = setTimeout(() => {
       const payload = items.map(({ productEnum, quantity }) => ({ productEnum, quantity }));
       apiFetch("/cart", { method: "PUT", body: JSON.stringify({ cart: payload }) }, token).catch(
-        () => {}
+        () => {},
       );
     }, SYNC_DELAY_MS);
 
@@ -88,7 +93,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const found = prev.find((p) => p.productEnum === product.productEnum);
       if (found) {
         return prev.map((p) =>
-          p.productEnum === product.productEnum ? { ...p, quantity: p.quantity + 1 } : p
+          p.productEnum === product.productEnum ? { ...p, quantity: p.quantity + 1 } : p,
         );
       }
       return [...prev, { ...product, quantity: 1 }];
@@ -103,7 +108,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) =>
       qty <= 0
         ? prev.filter((p) => p.productEnum !== productEnum)
-        : prev.map((p) => (p.productEnum === productEnum ? { ...p, quantity: qty } : p))
+        : prev.map((p) => (p.productEnum === productEnum ? { ...p, quantity: qty } : p)),
     );
   }, []);
 
@@ -113,8 +118,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const count = items.reduce((n, i) => n + i.quantity, 0);
     const subtotal = items.reduce((s, i) => s + i.sellingPrice * i.quantity, 0);
     const totalSavings = items.reduce(
-      (s, i) => s + Math.max(0, i.marketPrice - i.sellingPrice) * i.quantity,
-      0
+      (s, i) => s + calculateLineSavings(i.marketPrice, i.sellingPrice, i.quantity),
+      0,
     );
     return { items, count, subtotal, totalSavings, add, remove, setQty, clear };
   }, [items, add, remove, setQty, clear]);
@@ -126,8 +131,4 @@ export function useCart() {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error("useCart must be used within CartProvider");
   return ctx;
-}
-
-export function formatPrice(n: number) {
-  return `₹${n.toLocaleString("en-IN")}`;
 }

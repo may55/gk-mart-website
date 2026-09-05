@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { adminFetch } from "../../../admin/lib/admin-api";
 import { InventoryAddForm } from "../../../admin/components/inventory/inventory-add-form";
-import { InventoryBatchTable, type InventoryBatch } from "../../../admin/components/inventory/inventory-batch-table";
+import {
+  InventoryBatchTable,
+  type InventoryBatch,
+} from "../../../admin/components/inventory/inventory-batch-table";
 import { Loader2 } from "lucide-react";
 
 interface InventoryBatch {
@@ -12,7 +15,7 @@ interface InventoryBatch {
   numberOfUnits: number;
   totalCostPrice: number;
   vendorName: string;
-  expiryDate?: string;
+  billImage?: string;
   createdAt: string;
 }
 
@@ -36,7 +39,9 @@ function InventoryPage() {
     }
   }, []);
 
-  useEffect(() => { loadBatches(); }, [loadBatches]);
+  useEffect(() => {
+    loadBatches();
+  }, [loadBatches]);
 
   return (
     <div className="p-6 space-y-8">
