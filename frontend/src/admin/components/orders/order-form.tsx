@@ -52,7 +52,14 @@ interface Props {
 }
 
 const DELIVERY_STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"];
-const PAYMENT_METHODS = ["cash", "upi", "card", "net_banking"];
+const PAYMENT_METHODS = [
+  { value: "Cash on Delivery", label: "Cash on Delivery" },
+  { value: "cash", label: "Cash" },
+  { value: "cod", label: "Cash on Delivery (legacy)" },
+  { value: "upi", label: "UPI" },
+  { value: "card", label: "Card" },
+  { value: "net_banking", label: "Net Banking" },
+];
 
 const EMPTY_ITEM: OrderItemData = { enum: "", unit: "", sellingPrice: "", costPrice: "", mrp: "" };
 
@@ -297,9 +304,9 @@ export function OrderForm({ order, onClose, onSaved }: Props) {
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="">Select...</option>
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
+                {PAYMENT_METHODS.map((method) => (
+                  <option key={method.value} value={method.value}>
+                    {method.label}
                   </option>
                 ))}
               </select>

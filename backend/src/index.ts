@@ -24,15 +24,25 @@ const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 // In development, always allow the local Vite dev server alongside the configured origin
-const allowedOrigins = process.env.NODE_ENV === 'development'
-  ? [FRONTEND_URL, 'http://localhost:5173']
-  : [FRONTEND_URL];
+const allowedOrigins = new Set([FRONTEND_URL.replace(/\/$/, '')]);
+try {
+  const configuredUrl = new URL(FRONTEND_URL);
+  const alternateHost = configuredUrl.hostname.startsWith('www.')
+    ? configuredUrl.hostname.slice(4)
+    : `www.${configuredUrl.hostname}`;
+  allowedOrigins.add(`${configuredUrl.protocol}//${alternateHost}`);
+} catch {
+  // Invalid configuration is still rejected by CORS; startup remains diagnosable.
+}
+if (process.env.NODE_ENV === 'development') {
+  allowedOrigins.add('http://localhost:5173');
+}
 
 // Middleware
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.has(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

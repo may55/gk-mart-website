@@ -87,8 +87,8 @@ vm_scp -r "${BACKEND_DIR}/dist" "${VM_USER}@${VM_HOST}:${VM_BACKEND_DIR}/"
 vm_scp "${BACKEND_DIR}/package.json" "${VM_USER}@${VM_HOST}:${VM_BACKEND_DIR}/"
 vm_scp "${BACKEND_DIR}/package-lock.json" "${VM_USER}@${VM_HOST}:${VM_BACKEND_DIR}/"
 vm_scp "${BACKEND_DIR}/.env" "${VM_USER}@${VM_HOST}:${VM_BACKEND_DIR}/.env"
-# ensure CORS origin matches where the frontend is actually served from
-vm_ssh "sed -i 's|^FRONTEND_URL=.*|FRONTEND_URL=http://${NGINX_SERVER_NAME%% *}|' '${VM_BACKEND_DIR}/.env'"
+# ensure CORS origin matches the HTTPS frontend after certbot redirects HTTP
+vm_ssh "sed -i 's|^FRONTEND_URL=.*|FRONTEND_URL=https://${NGINX_SERVER_NAME%% *}|' '${VM_BACKEND_DIR}/.env'"
 echo "Backend files copied!"
 
 echo
