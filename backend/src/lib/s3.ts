@@ -70,6 +70,31 @@ export const uploadInventoryBill = async (
   return resolveImageUrl(bucket, key);
 };
 
+/** Uploads or replaces the image used for a product category. */
+export const uploadCategoryImage = async (
+  categoryId: string,
+  fileBuffer: Buffer,
+  mimeType: string,
+): Promise<string> => {
+  const s3 = getS3Client();
+  const bucket = getBucket();
+  const ext = mimeType.split('/')[1] ?? 'jpg';
+  const key = `categories/${categoryId}/image_${Date.now()}.${ext}`;
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: fileBuffer,
+      ContentType: mimeType,
+      CacheControl: 'public, max-age=31536000',
+      ACL: 'public-read',
+    }),
+  );
+
+  return resolveImageUrl(bucket, key);
+};
+
 export const deleteItemImage = async (imageUrl: string): Promise<void> => {
   const s3 = getS3Client();
   const bucket = getBucket();

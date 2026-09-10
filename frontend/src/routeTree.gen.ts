@@ -30,6 +30,7 @@ import { Route as AdminAdminOrdersRouteImport } from './routes/admin/_admin/orde
 import { Route as AdminAdminNotificationsRouteImport } from './routes/admin/_admin/notifications'
 import { Route as AdminAdminInventoryRouteImport } from './routes/admin/_admin/inventory'
 import { Route as AdminAdminDashboardRouteImport } from './routes/admin/_admin/dashboard'
+import { Route as AdminAdminCategoriesRouteImport } from './routes/admin/_admin/categories'
 import { Route as AdminAdminAccountsRouteImport } from './routes/admin/_admin/accounts'
 import { Route as AdminAdminProductsProductEnumRouteImport } from './routes/admin/_admin/products.$productEnum'
 
@@ -138,6 +139,11 @@ const AdminAdminDashboardRoute = AdminAdminDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AdminAdminRoute,
 } as any)
+const AdminAdminCategoriesRoute = AdminAdminCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AdminAdminRoute,
+} as any)
 const AdminAdminAccountsRoute = AdminAdminAccountsRouteImport.update({
   id: '/accounts',
   path: '/accounts',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/product/$productEnum': typeof ProductProductEnumRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/accounts': typeof AdminAdminAccountsRoute
+  '/admin/categories': typeof AdminAdminCategoriesRoute
   '/admin/dashboard': typeof AdminAdminDashboardRoute
   '/admin/inventory': typeof AdminAdminInventoryRoute
   '/admin/notifications': typeof AdminAdminNotificationsRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/order/$orderId': typeof OrderOrderIdRoute
   '/product/$productEnum': typeof ProductProductEnumRoute
   '/admin/accounts': typeof AdminAdminAccountsRoute
+  '/admin/categories': typeof AdminAdminCategoriesRoute
   '/admin/dashboard': typeof AdminAdminDashboardRoute
   '/admin/inventory': typeof AdminAdminInventoryRoute
   '/admin/notifications': typeof AdminAdminNotificationsRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/product/$productEnum': typeof ProductProductEnumRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/_admin/accounts': typeof AdminAdminAccountsRoute
+  '/admin/_admin/categories': typeof AdminAdminCategoriesRoute
   '/admin/_admin/dashboard': typeof AdminAdminDashboardRoute
   '/admin/_admin/inventory': typeof AdminAdminInventoryRoute
   '/admin/_admin/notifications': typeof AdminAdminNotificationsRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/product/$productEnum'
     | '/admin/'
     | '/admin/accounts'
+    | '/admin/categories'
     | '/admin/dashboard'
     | '/admin/inventory'
     | '/admin/notifications'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/order/$orderId'
     | '/product/$productEnum'
     | '/admin/accounts'
+    | '/admin/categories'
     | '/admin/dashboard'
     | '/admin/inventory'
     | '/admin/notifications'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/product/$productEnum'
     | '/admin/'
     | '/admin/_admin/accounts'
+    | '/admin/_admin/categories'
     | '/admin/_admin/dashboard'
     | '/admin/_admin/inventory'
     | '/admin/_admin/notifications'
@@ -469,6 +481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminDashboardRouteImport
       parentRoute: typeof AdminAdminRoute
     }
+    '/admin/_admin/categories': {
+      id: '/admin/_admin/categories'
+      path: '/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AdminAdminCategoriesRouteImport
+      parentRoute: typeof AdminAdminRoute
+    }
     '/admin/_admin/accounts': {
       id: '/admin/_admin/accounts'
       path: '/accounts'
@@ -499,6 +518,7 @@ const AdminAdminProductsRouteWithChildren =
 
 interface AdminAdminRouteChildren {
   AdminAdminAccountsRoute: typeof AdminAdminAccountsRoute
+  AdminAdminCategoriesRoute: typeof AdminAdminCategoriesRoute
   AdminAdminDashboardRoute: typeof AdminAdminDashboardRoute
   AdminAdminInventoryRoute: typeof AdminAdminInventoryRoute
   AdminAdminNotificationsRoute: typeof AdminAdminNotificationsRoute
@@ -509,6 +529,7 @@ interface AdminAdminRouteChildren {
 
 const AdminAdminRouteChildren: AdminAdminRouteChildren = {
   AdminAdminAccountsRoute: AdminAdminAccountsRoute,
+  AdminAdminCategoriesRoute: AdminAdminCategoriesRoute,
   AdminAdminDashboardRoute: AdminAdminDashboardRoute,
   AdminAdminInventoryRoute: AdminAdminInventoryRoute,
   AdminAdminNotificationsRoute: AdminAdminNotificationsRoute,

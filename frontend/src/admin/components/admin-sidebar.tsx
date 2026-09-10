@@ -8,6 +8,7 @@ import {
   Wallet,
   Bell,
   LogOut,
+  Tags,
 } from "lucide-react";
 import { useAdminAuth } from "../lib/admin-auth-context";
 import { cn } from "../../lib/utils";
@@ -15,6 +16,7 @@ import { cn } from "../../lib/utils";
 const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
   { label: "Manage Products", icon: Package, to: "/admin/products" },
+  { label: "Manage Categories", icon: Tags, to: "/admin/categories" },
   { label: "Add Inventory", icon: PackagePlus, to: "/admin/inventory" },
   { label: "Manage Users", icon: Users, to: "/admin/users" },
   { label: "Manage Orders", icon: ShoppingCart, to: "/admin/orders" },
@@ -52,7 +54,7 @@ export function AdminSidebar() {
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     isActive
                       ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />

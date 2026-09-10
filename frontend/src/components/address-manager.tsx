@@ -300,27 +300,29 @@ export function AddressForm({
                 <p className="text-xs text-muted-foreground">{form.societyAddress}</p>
               )}
             </div>
-            <Field
-              label="Flat number *"
-              value={form.flatNumber}
-              onChange={set("flatNumber")}
-              placeholder="e.g. 402"
-              error={errors.flatNumber}
-            />
-            <Field
-              label="Block *"
-              value={form.block}
-              onChange={set("block")}
-              placeholder="e.g. A"
-              error={errors.block}
-            />
-            <Field
-              label="Floor *"
-              value={form.floor}
-              onChange={set("floor")}
-              placeholder="e.g. 4"
-              error={errors.floor}
-            />
+            <div className="grid grid-cols-3 gap-2">
+              <Field
+                label="Flat no. *"
+                value={form.flatNumber}
+                onChange={set("flatNumber")}
+                placeholder="402"
+                error={errors.flatNumber}
+              />
+              <Field
+                label="Block *"
+                value={form.block}
+                onChange={set("block")}
+                placeholder="A"
+                error={errors.block}
+              />
+              <Field
+                label="Floor *"
+                value={form.floor}
+                onChange={set("floor")}
+                placeholder="4"
+                error={errors.floor}
+              />
+            </div>
             <Field
               label="Address line 1 *"
               value={

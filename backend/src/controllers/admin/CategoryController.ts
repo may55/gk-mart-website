@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import CategoryRepository from '../../repositories/CategoryRepository';
 import { AdminRequest } from '../../middleware/adminAuth';
 import Joi from 'joi';
+import { uploadCategoryImage } from '../../lib/s3';
 
 const categorySchema = Joi.object({
   label: Joi.string().required().trim(),
@@ -65,6 +66,27 @@ class CategoryController {
       res.json({ success: true, message: 'Category deleted' });
     } catch (err) {
       next(err);
+    }
+  }
+
+  /** Uploads the category image and saves its public URL on the category. */
+  async uploadImage(req: AdminRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const file = req.file;
+      if (!file) {
+        res.status(400).json({ success: false, message: 'No image uploaded' });
+        return;
+      }
+      const category = await CategoryRepository.findById(req.params.id);
+      if (!category) {
+        res.status(404).json({ success: false, message: 'Category not found' });
+        return;
+      }
+      const image = await uploadCategoryImage(category.id, file.buffer, file.mimetype);
+      const updated = await CategoryRepository.updateById(category.id, { image });
+      res.json({ success: true, message: 'Category image updated', data: updated });
+    } catch (error) {
+      next(error);
     }
   }
 }
