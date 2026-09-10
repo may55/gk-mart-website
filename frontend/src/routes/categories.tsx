@@ -5,6 +5,9 @@ import type { Category } from "@/lib/types";
 import { apiFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/categories")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : "",
+  }),
   head: () => ({
     meta: [
       { title: "Categories — GK Mart" },
@@ -19,8 +22,8 @@ export const Route = createFileRoute("/categories")({
 function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filterText, setFilterText] = useState("");
   const navigate = useNavigate();
+  const { q: filterText } = Route.useSearch();
 
   useEffect(() => {
     apiFetch<{ data: Category[] }>("/categories")
@@ -30,7 +33,7 @@ function CategoriesPage() {
   }, []);
 
   const filtered = categories.filter((c) =>
-    c.label.toLowerCase().includes(filterText.toLowerCase())
+    c.label.toLowerCase().includes(filterText.toLowerCase()),
   );
 
   return (
@@ -46,7 +49,9 @@ function CategoriesPage() {
             <input
               type="text"
               value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
+              onChange={(e) =>
+                navigate({ to: "/categories", search: { q: e.target.value || undefined } as never })
+              }
               placeholder="Search categories..."
               className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />

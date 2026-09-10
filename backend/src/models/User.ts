@@ -2,6 +2,11 @@ import { Schema, model, Document, Types } from 'mongoose';
 
 export interface IAddress {
   label: string;
+  society: string;
+  societyAddress: string;
+  flatNumber: string;
+  block: string;
+  floor: string;
   line1: string;
   line2: string;
   pincode: string;
@@ -60,6 +65,11 @@ const UserSchema = new Schema<IUser>(
     addresses: [
       {
         label: { type: String, default: '' },
+        society: { type: String, default: '' },
+        societyAddress: { type: String, default: '' },
+        flatNumber: { type: String, default: '' },
+        block: { type: String, default: '' },
+        floor: { type: String, default: '' },
         line1: { type: String, default: '' },
         line2: { type: String, default: '' },
         pincode: { type: String, default: '' },

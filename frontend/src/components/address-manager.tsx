@@ -4,10 +4,21 @@ import { apiFetch } from "@/lib/api";
 import { formatPrice } from "@/lib/pricing";
 import type { Address } from "@/lib/types";
 
-export type AddrScreen = "list" | "form";
+export type AddrScreen = "list" | "form" | "request";
+
+export const SOCIETIES = [
+  "Shubh Labh Residency, Khajrana Square, Indore, Madhya Pradesh 452018",
+  "Sanjhi Chhat Apartment, Khajrana Square, Indore, Madhya Pradesh 452018",
+  "Shubh Labh Prime, Indore, Madhya Pradesh 452018",
+] as const;
 
 const EMPTY_FORM: Address = {
   label: "",
+  society: "",
+  societyAddress: "",
+  flatNumber: "",
+  block: "",
+  floor: "",
   line1: "",
   line2: "",
   pincode: "",
@@ -47,9 +58,17 @@ export function AddressManager({
           if (!token) return;
           const url = editIndex !== null ? `/user/addresses/${editIndex}` : "/user/addresses";
           const method = editIndex !== null ? "PUT" : "POST";
+          const payload = {
+            ...data,
+            line1: `${data.flatNumber}, Block ${data.block}, Floor ${data.floor}`,
+            line2: data.societyAddress,
+            city: "Indore",
+            state: "Madhya Pradesh",
+            pincode: "452018",
+          };
           const res = await apiFetch<{ data: Address[] }>(
             url,
-            { method, body: JSON.stringify(data) },
+            { method, body: JSON.stringify(payload) },
             token,
           );
           onAddressesChange(res.data);
@@ -57,6 +76,10 @@ export function AddressManager({
         }}
       />
     );
+  }
+
+  if (subScreen === "request") {
+    return <DeliveryRequestForm token={token} onBack={() => setSubScreen("list")} />;
   }
 
   return (
@@ -128,8 +151,12 @@ export function AddressManager({
                             {addr.label}
                           </p>
                         )}
-                        <p className="font-semibold">{addr.line1}</p>
-                        {addr.line2 && <p className="text-muted-foreground">{addr.line2}</p>}
+                        <p className="font-semibold">
+                          {addr.flatNumber
+                            ? `${addr.flatNumber}, Block ${addr.block}, Floor ${addr.floor}`
+                            : addr.line1}
+                        </p>
+                        {addr.society && <p className="text-muted-foreground">{addr.society}</p>}
                         <p className="text-muted-foreground">
                           {addr.city}, {addr.state} – {addr.pincode}
                         </p>
@@ -160,6 +187,16 @@ export function AddressManager({
               ))}
             </ul>
           )}
+          <button
+            type="button"
+            onClick={() => setSubScreen("request")}
+            className="mt-6 w-full rounded-2xl border border-dashed border-primary/50 bg-primary/5 px-4 py-4 text-left"
+          >
+            <p className="text-sm font-bold text-primary">Request delivery in another area</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tell us your full address and we’ll review your request.
+            </p>
+          </button>
         </main>
       </div>
     </div>
@@ -185,7 +222,10 @@ export function AddressForm({
 
   const validate = (): boolean => {
     const e: typeof errors = {};
-    if (!form.line1.trim()) e.line1 = "Address line 1 is required";
+    if (!form.society) e.society = "Select a society";
+    if (!form.flatNumber.trim()) e.flatNumber = "Flat number is required";
+    if (!form.block.trim()) e.block = "Block is required";
+    if (!form.floor.trim()) e.floor = "Floor is required";
     if (!/^\d{6}$/.test(form.pincode.trim())) e.pincode = "Pincode must be 6 digits";
     if (!form.city.trim()) e.city = "City is required";
     if (!form.state.trim()) e.state = "State is required";
@@ -230,18 +270,74 @@ export function AddressForm({
               onChange={set("label")}
               placeholder="e.g. Home, Office, Parents'"
             />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-foreground">Society *</label>
+              <select
+                value={form.society}
+                onChange={(e) =>
+                  setForm((p) => ({
+                    ...p,
+                    society: e.target.value,
+                    societyAddress: e.target.value,
+                    city: "Indore",
+                    state: "Madhya Pradesh",
+                    pincode: "452018",
+                  }))
+                }
+                className={`rounded-xl border bg-card px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 ${errors.society ? "border-destructive" : "border-border"}`}
+              >
+                <option value="">Select society</option>
+                {SOCIETIES.map((society) => (
+                  <option key={society} value={society}>
+                    {society.split(",")[0]}
+                  </option>
+                ))}
+              </select>
+              {errors.society && (
+                <p className="text-[11px] font-medium text-destructive">{errors.society}</p>
+              )}
+              {form.society && (
+                <p className="text-xs text-muted-foreground">{form.societyAddress}</p>
+              )}
+            </div>
+            <Field
+              label="Flat number *"
+              value={form.flatNumber}
+              onChange={set("flatNumber")}
+              placeholder="e.g. 402"
+              error={errors.flatNumber}
+            />
+            <Field
+              label="Block *"
+              value={form.block}
+              onChange={set("block")}
+              placeholder="e.g. A"
+              error={errors.block}
+            />
+            <Field
+              label="Floor *"
+              value={form.floor}
+              onChange={set("floor")}
+              placeholder="e.g. 4"
+              error={errors.floor}
+            />
             <Field
               label="Address line 1 *"
-              value={form.line1}
-              onChange={set("line1")}
-              placeholder="House / flat no., building name"
-              error={errors.line1}
+              value={
+                form.society
+                  ? `${form.flatNumber}, Block ${form.block}, Floor ${form.floor}`
+                  : form.line1
+              }
+              onChange={() => undefined}
+              placeholder="Generated from flat, block and floor"
+              readOnly
             />
             <Field
               label="Address line 2"
-              value={form.line2}
-              onChange={set("line2")}
-              placeholder="Street, area, landmark (optional)"
+              value={form.societyAddress}
+              onChange={() => undefined}
+              placeholder="Society address"
+              readOnly
             />
             <Field
               label="Pincode *"
@@ -250,6 +346,7 @@ export function AddressForm({
               placeholder="6-digit pincode"
               inputMode="numeric"
               maxLength={6}
+              readOnly
               error={errors.pincode}
             />
             <div className="grid grid-cols-2 gap-3">
@@ -258,6 +355,7 @@ export function AddressForm({
                 value={form.city}
                 onChange={set("city")}
                 placeholder="City"
+                readOnly
                 error={errors.city}
               />
               <Field
@@ -265,6 +363,7 @@ export function AddressForm({
                 value={form.state}
                 onChange={set("state")}
                 placeholder="State"
+                readOnly
                 error={errors.state}
               />
             </div>
@@ -302,6 +401,7 @@ function Field({
   error,
   inputMode,
   maxLength,
+  readOnly,
 }: {
   label: string;
   value: string;
@@ -310,6 +410,7 @@ function Field({
   error?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   maxLength?: number;
+  readOnly?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -321,11 +422,90 @@ function Field({
         placeholder={placeholder}
         inputMode={inputMode}
         maxLength={maxLength}
+        readOnly={readOnly}
         className={`rounded-xl border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 ${
           error ? "border-destructive" : "border-border"
         }`}
       />
       {error && <p className="text-[11px] font-medium text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+function DeliveryRequestForm({ token, onBack }: { token: string | null; onBack: () => void }) {
+  const [fullAddress, setFullAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const submit = async () => {
+    if (!token || fullAddress.trim().length < 10 || !/^\d{10}$/.test(phone)) {
+      setMessage("Enter a complete address and a valid 10-digit phone number.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await apiFetch(
+        "/delivery-requests",
+        { method: "POST", body: JSON.stringify({ fullAddress, phone }) },
+        token,
+      );
+      setMessage("Request received. We’ll contact you after reviewing the area.");
+      setFullAddress("");
+      setPhone("");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not submit request.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background font-sans text-foreground">
+      <div className="mx-auto flex min-h-screen max-w-md flex-col pb-32">
+        <header className="flex items-center gap-2 px-5 pb-4 pt-6">
+          <button
+            type="button"
+            onClick={onBack}
+            className="grid h-9 w-9 place-items-center rounded-full hover:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-lg font-extrabold">Request delivery</h1>
+        </header>
+        <main className="flex-1 space-y-4 px-5 pt-2">
+          <p className="text-sm text-muted-foreground">
+            We currently deliver only to selected societies. Request delivery by sharing your full
+            address.
+          </p>
+          <textarea
+            value={fullAddress}
+            onChange={(e) => setFullAddress(e.target.value)}
+            rows={6}
+            placeholder="Enter your full address"
+            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="Contact phone number"
+            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          {message && (
+            <p className="rounded-xl bg-primary/10 px-3 py-2 text-sm text-primary">{message}</p>
+          )}
+          <button
+            type="button"
+            onClick={submit}
+            disabled={saving}
+            className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
+          >
+            {saving ? "Submitting…" : "Request delivery"}
+          </button>
+        </main>
+      </div>
     </div>
   );
 }

@@ -13,6 +13,7 @@ export interface IProduct extends Document {
   averageCostPrice: number;
   images: string[];
   categories: string[];
+  metadata: string;
   isVisible: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -81,9 +82,17 @@ const ProductSchema = new Schema<IProduct>(
       type: [String],
       default: [],
     },
+    metadata: {
+      type: String,
+      default: '',
+      trim: true,
+    },
   },
   { timestamps: true }
 );
+
+// Enables MongoDB text search across the customer-facing product vocabulary.
+ProductSchema.index({ name: 'text', categories: 'text', metadata: 'text' });
 
 const Product = model<IProduct>('Product', ProductSchema);
 

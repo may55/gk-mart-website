@@ -14,11 +14,14 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as HelpSupportRouteImport } from './routes/help-support'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as AddressesRouteImport } from './routes/addresses'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProductProductEnumRouteImport } from './routes/product.$productEnum'
+import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminAdminRouteImport } from './routes/admin/_admin'
 import { Route as AdminAdminUsersRouteImport } from './routes/admin/_admin/users'
@@ -55,6 +58,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpSupportRoute = HelpSupportRouteImport.update({
+  id: '/help-support',
+  path: '/help-support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
@@ -63,6 +71,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AddressesRoute = AddressesRouteImport.update({
+  id: '/addresses',
+  path: '/addresses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -78,6 +91,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const ProductProductEnumRoute = ProductProductEnumRouteImport.update({
   id: '/product/$productEnum',
   path: '/product/$productEnum',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderOrderIdRoute = OrderOrderIdRouteImport.update({
+  id: '/order/$orderId',
+  path: '/order/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -134,8 +152,10 @@ const AdminAdminProductsProductEnumRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/addresses': typeof AddressesRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
+  '/help-support': typeof HelpSupportRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
@@ -143,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/admin': typeof AdminAdminRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/order/$orderId': typeof OrderOrderIdRoute
   '/product/$productEnum': typeof ProductProductEnumRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/accounts': typeof AdminAdminAccountsRoute
@@ -156,8 +177,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/addresses': typeof AddressesRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
+  '/help-support': typeof HelpSupportRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
@@ -165,6 +188,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/admin': typeof AdminIndexRoute
   '/admin/login': typeof AdminLoginRoute
+  '/order/$orderId': typeof OrderOrderIdRoute
   '/product/$productEnum': typeof ProductProductEnumRoute
   '/admin/accounts': typeof AdminAdminAccountsRoute
   '/admin/dashboard': typeof AdminAdminDashboardRoute
@@ -178,8 +202,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/addresses': typeof AddressesRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
+  '/help-support': typeof HelpSupportRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
@@ -187,6 +213,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/admin/_admin': typeof AdminAdminRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/order/$orderId': typeof OrderOrderIdRoute
   '/product/$productEnum': typeof ProductProductEnumRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/_admin/accounts': typeof AdminAdminAccountsRoute
@@ -202,8 +229,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/addresses'
     | '/cart'
     | '/categories'
+    | '/help-support'
     | '/login'
     | '/notifications'
     | '/orders'
@@ -211,6 +240,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/admin/login'
+    | '/order/$orderId'
     | '/product/$productEnum'
     | '/admin/'
     | '/admin/accounts'
@@ -224,8 +254,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/addresses'
     | '/cart'
     | '/categories'
+    | '/help-support'
     | '/login'
     | '/notifications'
     | '/orders'
@@ -233,6 +265,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/admin/login'
+    | '/order/$orderId'
     | '/product/$productEnum'
     | '/admin/accounts'
     | '/admin/dashboard'
@@ -245,8 +278,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/addresses'
     | '/cart'
     | '/categories'
+    | '/help-support'
     | '/login'
     | '/notifications'
     | '/orders'
@@ -254,6 +289,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin/_admin'
     | '/admin/login'
+    | '/order/$orderId'
     | '/product/$productEnum'
     | '/admin/'
     | '/admin/_admin/accounts'
@@ -268,8 +304,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AddressesRoute: typeof AddressesRoute
   CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
+  HelpSupportRoute: typeof HelpSupportRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   OrdersRoute: typeof OrdersRoute
@@ -277,6 +315,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   AdminAdminRoute: typeof AdminAdminRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
+  OrderOrderIdRoute: typeof OrderOrderIdRoute
   ProductProductEnumRoute: typeof ProductProductEnumRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -318,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help-support': {
+      id: '/help-support'
+      path: '/help-support'
+      fullPath: '/help-support'
+      preLoaderRoute: typeof HelpSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categories': {
       id: '/categories'
       path: '/categories'
@@ -330,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/cart'
       fullPath: '/cart'
       preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/addresses': {
+      id: '/addresses'
+      path: '/addresses'
+      fullPath: '/addresses'
+      preLoaderRoute: typeof AddressesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -351,6 +404,13 @@ declare module '@tanstack/react-router' {
       path: '/product/$productEnum'
       fullPath: '/product/$productEnum'
       preLoaderRoute: typeof ProductProductEnumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order/$orderId': {
+      id: '/order/$orderId'
+      path: '/order/$orderId'
+      fullPath: '/order/$orderId'
+      preLoaderRoute: typeof OrderOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/login': {
@@ -463,8 +523,10 @@ const AdminAdminRouteWithChildren = AdminAdminRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AddressesRoute: AddressesRoute,
   CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
+  HelpSupportRoute: HelpSupportRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   OrdersRoute: OrdersRoute,
@@ -472,6 +534,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   AdminAdminRoute: AdminAdminRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,
+  OrderOrderIdRoute: OrderOrderIdRoute,
   ProductProductEnumRoute: ProductProductEnumRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

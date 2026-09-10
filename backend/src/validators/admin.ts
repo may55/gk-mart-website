@@ -18,6 +18,7 @@ const productCreateSchema = Joi.object({
   marketPrice: Joi.number().required().min(0),
   expiryMonth: Joi.number().integer().min(1).max(12).optional(),
   expiryYear: Joi.number().integer().min(2000).max(3000).optional(),
+  metadata: Joi.string().allow('').max(20000).optional(),
   categories: Joi.array().items(Joi.string().trim()).default([]),
   isVisible: Joi.boolean().default(true),
 });
@@ -30,6 +31,7 @@ const productUpdateSchema = Joi.object({
   marketPrice: Joi.number().min(0),
   expiryMonth: Joi.number().integer().min(1).max(12).optional(),
   expiryYear: Joi.number().integer().min(2000).max(3000).optional(),
+  metadata: Joi.string().allow('').max(20000).optional(),
   categories: Joi.array().items(Joi.string().trim()),
   isVisible: Joi.boolean(),
 });

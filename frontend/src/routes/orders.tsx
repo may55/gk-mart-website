@@ -81,7 +81,7 @@ function OrdersPage() {
     );
   }
 
-  // ── Order detail screen ───────────────────────────────────────────────────
+  // Legacy in-page detail rendering is replaced by the shareable /order/:orderId route.
   if (selected) {
     const addr = selected.userAddress ?? null;
     const isOngoing = ONGOING_STATUSES.has(selected.deliveryStatus);
@@ -279,7 +279,7 @@ function OrdersPage() {
                   <button
                     key={o._id}
                     type="button"
-                    onClick={() => setSelected(o)}
+                    onClick={() => navigate({ to: "/order/$orderId", params: { orderId: o._id } })}
                     className="w-full rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] text-left active:scale-[0.98] transition-transform"
                   >
                     <div className="flex items-center gap-3">
@@ -327,7 +327,7 @@ function OrdersPage() {
                   <button
                     key={o._id}
                     type="button"
-                    onClick={() => setSelected(o)}
+                    onClick={() => navigate({ to: "/order/$orderId", params: { orderId: o._id } })}
                     className="w-full flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-[var(--shadow-card)] text-left active:scale-[0.98] transition-transform"
                   >
                     <span className="grid h-11 w-11 place-items-center rounded-xl bg-muted text-foreground">

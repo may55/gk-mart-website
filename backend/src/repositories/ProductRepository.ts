@@ -14,18 +14,7 @@ class ProductRepository {
       filter['isVisible'] = true;
       filter['unitsInStock'] = { $gt: 0 };
     }
-    if (q) {
-      const or: Record<string, unknown>[] = [
-        { name: { $regex: q, $options: 'i' } },
-        { sku: { $regex: q, $options: 'i' } },
-        { enum: { $regex: q, $options: 'i' } },
-      ];
-      const numericQuery = Number(q);
-      if (Number.isFinite(numericQuery)) {
-        or.push({ marketPrice: numericQuery }, { expiryYear: numericQuery }, { expiryMonth: numericQuery });
-      }
-      filter['$or'] = or;
-    }
+    if (q) filter['$text'] = { $search: q };
     if (category) filter['categories'] = category;
     return await Product.find(filter).sort({ createdAt: -1 });
   }

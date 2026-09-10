@@ -13,6 +13,7 @@ export interface Product {
   averageCostPrice: number;
   images: string[];
   categories: string[];
+  metadata: string;
   isVisible: boolean;
 }
 
@@ -40,6 +41,11 @@ export interface CartSyncItem {
 
 export interface Address {
   label: string;
+  society: string;
+  societyAddress: string;
+  flatNumber: string;
+  block: string;
+  floor: string;
   line1: string;
   line2: string;
   pincode: string;

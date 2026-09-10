@@ -15,6 +15,7 @@ import cartRouter from './routes/cart';
 import addressRouter from './routes/addresses';
 import ordersRouter from './routes/orders';
 import notificationsRouter from './routes/notifications';
+import deliveryRequestsRouter from './routes/deliveryRequests';
 import errorHandler from './middleware/errorHandler';
 
 dotenv.config();
@@ -90,6 +91,7 @@ app.use('/api/admin/notifications', adminNotificationsRouter);
 
 // User notifications
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/delivery-requests', deliveryRequestsRouter);
 
 // 404 handler
 app.use((req, res) => {

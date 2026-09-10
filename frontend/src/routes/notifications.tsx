@@ -38,19 +38,22 @@ function NotificationsPage() {
     if (!isLoggedIn || !token) return;
     apiFetch<{ data: UserNotification[] }>("/notifications", {}, token)
       .then((res) => {
-        setNotifications(res.data);
+        const validNotifications = res.data.filter(
+          (notification) => notification.notificationId && notification.notificationId._id,
+        );
+        setNotifications(validNotifications);
         // Mark all unread as read
-        res.data
+        validNotifications
           .filter((n) => !n.read)
           .forEach((n) => {
             apiFetch(
               `/notifications/${n.notificationId._id}/read`,
               { method: "PATCH" },
-              token
+              token,
             ).catch(() => {});
           });
         // Optimistically mark all as read in local state
-        setNotifications(res.data.map((n) => ({ ...n, read: true })));
+        setNotifications(validNotifications.map((n) => ({ ...n, read: true })));
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
@@ -181,9 +184,7 @@ function NotificationRow({
           {timeAgo(notification.receivedAt)}
         </p>
       </div>
-      {!notification.read && (
-        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-      )}
+      {!notification.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
     </div>
   );
 }

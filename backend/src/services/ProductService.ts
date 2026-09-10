@@ -11,6 +11,7 @@ interface CreateProductData {
   marketPrice: number;
   expiryMonth?: number;
   expiryYear?: number;
+  metadata?: string;
   categories?: string[];
   isVisible?: boolean;
 }
@@ -22,6 +23,7 @@ interface UpdateProductData {
   marketPrice?: number;
   expiryMonth?: number;
   expiryYear?: number;
+  metadata?: string;
   unitsInStock?: number;
   averageCostPrice?: number;
   categories?: string[];

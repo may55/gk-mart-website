@@ -10,6 +10,11 @@ interface AuthRequest extends Request {
 
 const addressSchema = Joi.object({
   label: Joi.string().trim().allow('').default(''),
+  society: Joi.string().trim().required(),
+  societyAddress: Joi.string().trim().required(),
+  flatNumber: Joi.string().trim().required(),
+  block: Joi.string().trim().required(),
+  floor: Joi.string().trim().required(),
   line1: Joi.string().trim().min(3).required().messages({ 'string.empty': 'Address line 1 is required' }),
   line2: Joi.string().trim().allow('').default(''),
   pincode: Joi.string().trim().pattern(/^\d{6}$/).required().messages({ 'string.pattern.base': 'Pincode must be 6 digits' }),
@@ -17,6 +22,15 @@ const addressSchema = Joi.object({
   state: Joi.string().trim().min(2).required().messages({ 'string.empty': 'State is required' }),
   phone: Joi.string().trim().pattern(/^\d{10}$/).required().messages({ 'string.pattern.base': 'Delivery phone must be 10 digits' }),
 });
+
+const SOCIETIES = new Set([
+  'Shubh Labh Residency, Khajrana Square, Indore, Madhya Pradesh 452018',
+  'Sanjhi Chhat Apartment, Khajrana Square, Indore, Madhya Pradesh 452018',
+  'Shubh Labh Prime, Indore, Madhya Pradesh 452018',
+]);
+
+const validateSociety = (value: { society: string; societyAddress: string }) =>
+  SOCIETIES.has(value.society) && value.society === value.societyAddress;
 
 const router = Router();
 router.use(authMiddleware);
@@ -35,6 +49,7 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction) => 
   try {
     const { error, value } = addressSchema.validate(req.body);
     if (error) { res.status(400).json({ success: false, message: error.details[0].message }); return; }
+    if (!validateSociety(value)) { res.status(400).json({ success: false, message: 'Please select a valid society' }); return; }
     const user = await User.findById(req.userId);
     if (!user) { res.status(404).json({ success: false, message: 'User not found' }); return; }
     user.addresses.push(value);
@@ -49,6 +64,7 @@ router.put('/:index', async (req: AuthRequest, res: Response, next: NextFunction
     const index = parseInt(req.params['index'], 10);
     const { error, value } = addressSchema.validate(req.body);
     if (error) { res.status(400).json({ success: false, message: error.details[0].message }); return; }
+    if (!validateSociety(value)) { res.status(400).json({ success: false, message: 'Please select a valid society' }); return; }
     const user = await User.findById(req.userId);
     if (!user) { res.status(404).json({ success: false, message: 'User not found' }); return; }
     if (index < 0 || index >= user.addresses.length) { res.status(404).json({ success: false, message: 'Address not found' }); return; }

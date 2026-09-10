@@ -9,6 +9,10 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : "",
+    category: typeof search.category === "string" ? search.category : "All",
+  }),
   head: () => ({
     meta: [
       { title: "GK Mart — Groceries delivered in minutes" },
@@ -32,13 +36,19 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>("All");
-  const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { isLoggedIn, token } = useAuth();
   const navigate = useNavigate();
+  const { q: search, category: activeCategory } = Route.useSearch();
+
+  const updateSearch = (q: string, category = activeCategory) => {
+    navigate({
+      to: "/",
+      search: { q: q || undefined, category: category === "All" ? undefined : category } as never,
+    });
+  };
 
   // Fetch categories once
   useEffect(() => {
@@ -123,7 +133,7 @@ function Index() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => updateSearch(e.target.value)}
               placeholder="Search products..."
               className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
@@ -138,7 +148,7 @@ function Index() {
                 return (
                   <button
                     key={cat.label}
-                    onClick={() => setActiveCategory(cat.label)}
+                    onClick={() => updateSearch(search, cat.label)}
                     className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                       isActive
                         ? "bg-primary text-primary-foreground shadow-[0_6px_14px_rgba(46,204,113,0.3)]"
@@ -172,9 +182,7 @@ function Index() {
           ) : products.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-20 text-center">
               <p className="text-sm font-semibold text-foreground">No products found</p>
-              <p className="text-xs text-muted-foreground">
-                Try a different search or category
-              </p>
+              <p className="text-xs text-muted-foreground">Try a different search or category</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
@@ -188,4 +196,3 @@ function Index() {
     </div>
   );
 }
-

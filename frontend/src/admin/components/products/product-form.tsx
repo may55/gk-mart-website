@@ -21,6 +21,7 @@ interface Product {
   averageCostPrice: number;
   images: string[];
   categories: string[];
+  metadata: string;
   isVisible: boolean;
 }
 
@@ -32,6 +33,7 @@ interface ProductFormData {
   marketPrice: string;
   expiryMonth: string;
   expiryYear: string;
+  metadata: string;
 }
 
 const EMPTY_FORM: ProductFormData = {
@@ -42,6 +44,7 @@ const EMPTY_FORM: ProductFormData = {
   marketPrice: "",
   expiryMonth: "",
   expiryYear: "",
+  metadata: "",
 };
 
 interface Props {
@@ -62,6 +65,7 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
           marketPrice: String(item.marketPrice),
           expiryMonth: item.expiryMonth ? String(item.expiryMonth) : "",
           expiryYear: item.expiryYear ? String(item.expiryYear) : "",
+          metadata: item.metadata ?? "",
         }
       : EMPTY_FORM,
   );
@@ -147,6 +151,7 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
         marketPrice: parseFloat(form.marketPrice),
         ...(form.expiryMonth ? { expiryMonth: parseInt(form.expiryMonth, 10) } : {}),
         ...(form.expiryYear ? { expiryYear: parseInt(form.expiryYear, 10) } : {}),
+        metadata: form.metadata.trim(),
         categories,
         isVisible,
       };
@@ -230,6 +235,20 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
             {field("Market Price (₹)", "marketPrice", "number")}
             {field("Expiry Month", "expiryMonth", "number")}
             {field("Expiry Year", "expiryYear", "number")}
+          </div>
+
+          <div className="mt-3 space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Search metadata</label>
+            <textarea
+              value={form.metadata}
+              onChange={(e) => setForm((p) => ({ ...p, metadata: e.target.value }))}
+              rows={5}
+              placeholder="Keywords, aliases, local names, brand, use cases, ingredients…"
+              className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground">
+              Used by MongoDB text search on the storefront.
+            </p>
           </div>
 
           {/* Categories */}
