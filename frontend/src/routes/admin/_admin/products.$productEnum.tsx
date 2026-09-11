@@ -77,7 +77,7 @@ function ProductDetailPage() {
 
   if (error || !product) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error ?? "Product not found"}
@@ -92,7 +92,7 @@ function ProductDetailPage() {
       : null;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
@@ -115,7 +115,7 @@ function ProductDetailPage() {
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Boxes className="h-4 w-4" />

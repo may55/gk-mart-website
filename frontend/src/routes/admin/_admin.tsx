@@ -3,9 +3,8 @@ import { AdminSidebar } from "../../admin/components/admin-sidebar";
 
 export const Route = createFileRoute("/admin/_admin")({
   beforeLoad: ({ context }) => {
-    const stored = typeof window !== "undefined"
-      ? localStorage.getItem("gkmart.admin.auth.v1")
-      : null;
+    const stored =
+      typeof window !== "undefined" ? localStorage.getItem("gkmart.admin.auth.v1") : null;
     if (!stored) {
       throw redirect({ to: "/admin/login" });
     }
@@ -21,9 +20,9 @@ export const Route = createFileRoute("/admin/_admin")({
 
 function AdminLayout() {
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex min-h-screen overflow-hidden bg-background">
       <AdminSidebar />
-      <main className="flex-1 overflow-y-auto">
+      <main className="min-w-0 flex-1 overflow-y-auto pt-14 md:pt-0">
         <Outlet />
       </main>
     </div>

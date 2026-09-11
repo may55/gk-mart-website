@@ -44,7 +44,7 @@ function InventoryPage() {
   }, [loadBatches]);
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8 p-4 sm:p-6">
       <div>
         <h1 className="text-xl font-semibold text-foreground">Add Inventory</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -52,7 +52,7 @@ function InventoryPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-6">
         <InventoryAddForm onAdded={loadBatches} />
       </div>
 

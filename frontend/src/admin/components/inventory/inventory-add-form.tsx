@@ -214,7 +214,7 @@ export function InventoryAddForm({ onAdded }: Props) {
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
       {isLoading &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm sm:items-center sm:p-4">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm font-medium text-foreground">Saving inventory…</p>
@@ -272,7 +272,7 @@ export function InventoryAddForm({ onAdded }: Props) {
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             New product details — image & categories can be added later
           </p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">SKU</label>
               <input
@@ -388,7 +388,7 @@ export function InventoryAddForm({ onAdded }: Props) {
 
       {/* Batch fields */}
       {(selected || isNewProduct) && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Number of Units</label>
             <input

@@ -201,8 +201,8 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-border bg-card shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-lg rounded-t-xl border border-border bg-card shadow-xl sm:rounded-xl">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-lg font-semibold">{isEdit ? "Edit Product" : "Add Product"}</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -210,8 +210,11 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto p-6">
-          <div className="grid grid-cols-2 gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="max-h-[90vh] space-y-4 overflow-y-auto p-4 sm:max-h-[80vh] sm:p-6"
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {field("Name", "name")}
             {field("SKU", "sku")}
           </div>

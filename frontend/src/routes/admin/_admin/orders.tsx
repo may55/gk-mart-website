@@ -9,7 +9,15 @@ interface Order {
   items: { enum: string; unit: number; sellingPrice: number; costPrice: number; mrp: number }[];
   userId: { _id: string; name: string; email: string } | string;
   totalAmount: number;
-  userAddress: { label: string; line1: string; line2: string; pincode: string; city: string; state: string; phone: string };
+  userAddress: {
+    label: string;
+    line1: string;
+    line2: string;
+    pincode: string;
+    city: string;
+    state: string;
+    phone: string;
+  };
   paymentMethod: string;
   deliveryStatus: string;
   deliveredAt?: string;
@@ -51,7 +59,9 @@ function OrdersPage() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const getUserName = (userId: Order["userId"]) => {
     if (typeof userId === "object" && userId !== null) return userId.name;
@@ -59,14 +69,19 @@ function OrdersPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Manage Orders</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">{orders.length} order(s) — sorted by latest update</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {orders.length} order(s) — sorted by latest update
+          </p>
         </div>
         <button
-          onClick={() => { setEditOrder(undefined); setShowForm(true); }}
+          onClick={() => {
+            setEditOrder(undefined);
+            setShowForm(true);
+          }}
           className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" />
@@ -80,11 +95,12 @@ function OrdersPage() {
         </div>
       ) : error ? (
         <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-          <AlertCircle className="h-4 w-4 shrink-0" />{error}
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[760px] text-sm">
             <thead className="bg-muted/50 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Invoice ID</th>
@@ -99,7 +115,11 @@ function OrdersPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {orders.length === 0 ? (
-                <tr><td colSpan={8} className="py-12 text-center text-muted-foreground">No orders yet.</td></tr>
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-muted-foreground">
+                    No orders yet.
+                  </td>
+                </tr>
               ) : (
                 orders.map((o) => (
                   <tr key={o._id} className="hover:bg-muted/30">
@@ -108,9 +128,13 @@ function OrdersPage() {
                     </td>
                     <td className="px-4 py-3 font-medium">{getUserName(o.userId)}</td>
                     <td className="px-4 py-3 text-right font-semibold">₹{o.totalAmount}</td>
-                    <td className="px-4 py-3 capitalize text-muted-foreground">{o.paymentMethod}</td>
+                    <td className="px-4 py-3 capitalize text-muted-foreground">
+                      {o.paymentMethod}
+                    </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[o.deliveryStatus] ?? ""}`}>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[o.deliveryStatus] ?? ""}`}
+                      >
                         {o.deliveryStatus}
                       </span>
                     </td>
@@ -119,8 +143,14 @@ function OrdersPage() {
                       {new Date(o.updatedAt).toLocaleDateString("en-IN")}
                     </td>
                     <td className="px-4 py-3">
-                      <button onClick={() => { setEditOrder(o); setShowForm(true); }}
-                        className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" title="Edit">
+                      <button
+                        onClick={() => {
+                          setEditOrder(o);
+                          setShowForm(true);
+                        }}
+                        className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                        title="Edit"
+                      >
                         <Pencil className="h-4 w-4" />
                       </button>
                     </td>
@@ -136,7 +166,10 @@ function OrdersPage() {
         <OrderForm
           order={editOrder}
           onClose={() => setShowForm(false)}
-          onSaved={() => { setShowForm(false); load(); }}
+          onSaved={() => {
+            setShowForm(false);
+            load();
+          }}
         />
       )}
     </div>

@@ -44,7 +44,7 @@ const CARDS = [
 
 export function SummaryCards(props: SummaryCardsProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
       {CARDS.map(({ key, label, icon: Icon, color }) => (
         <div key={key} className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">

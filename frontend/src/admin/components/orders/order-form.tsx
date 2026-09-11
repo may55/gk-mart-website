@@ -173,8 +173,8 @@ export function OrderForm({ order, onClose, onSaved }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-2xl rounded-xl border border-border bg-card shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-2xl rounded-t-xl border border-border bg-card shadow-xl sm:rounded-xl">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-lg font-semibold">{isEdit ? "Edit Order" : "Create Order"}</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -182,7 +182,10 @@ export function OrderForm({ order, onClose, onSaved }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto p-6 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="max-h-[90vh] space-y-4 overflow-y-auto p-4 sm:max-h-[80vh] sm:p-6"
+        >
           {/* Customer */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Customer</label>
@@ -214,7 +217,10 @@ export function OrderForm({ order, onClose, onSaved }: Props) {
               </button>
             </div>
             {orderItems.map((oi, i) => (
-              <div key={i} className="grid grid-cols-6 gap-2 rounded-lg border border-border p-3">
+              <div
+                key={i}
+                className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3 sm:grid-cols-6"
+              >
                 <div className="col-span-2 space-y-1">
                   <p className="text-xs text-muted-foreground">Item</p>
                   <select
