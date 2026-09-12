@@ -22,6 +22,9 @@ import type { Address } from "@/lib/types";
 type Screen = "cart" | "address" | "payment" | "success";
 
 export const Route = createFileRoute("/cart")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    checkout: search.checkout === "1" || search.checkout === true,
+  }),
   head: () => ({
     meta: [
       { title: "Your Cart — GK Mart" },
@@ -44,6 +47,7 @@ function CartPage() {
   const { items, setQty, remove, subtotal, totalSavings, count, clear } = useCart();
   const { isLoggedIn, token } = useAuth();
   const navigate = useNavigate();
+  const { checkout } = Route.useSearch();
   const delivery = 0;
   const total = subtotal + delivery;
 
@@ -113,9 +117,19 @@ function CartPage() {
   const [orderError, setOrderError] = useState("");
   const [invoiceId, setInvoiceId] = useState("");
 
+  useEffect(() => {
+    if (!checkout || !isLoggedIn || !token || screen !== "cart") return;
+    setAddrLoading(true);
+    apiFetch<{ data: Address[] }>("/user/addresses", {}, token)
+      .then((r) => setAddresses(r.data))
+      .catch(() => setAddresses([]))
+      .finally(() => setAddrLoading(false));
+    setScreen("address");
+  }, [checkout, isLoggedIn, token, screen]);
+
   const handleCheckout = () => {
     if (!isLoggedIn) {
-      setScreen("address");
+      navigate({ to: "/login", search: { redirect: "/cart?checkout=1" } as never });
       return;
     }
     setAddrLoading(true);
@@ -420,7 +434,7 @@ function CartPage() {
                       <div className="flex items-center gap-2 rounded-b-2xl border-t border-amber-400/30 bg-amber-50 px-3 py-2 dark:bg-amber-950/40">
                         <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
                         <p className="flex-1 text-[11px] font-semibold text-amber-700">
-                          Only {stockLimit} left in stock — quantity reduced
+                          Quantity reduced because the requested quantity is unavailable
                         </p>
                         <button
                           type="button"

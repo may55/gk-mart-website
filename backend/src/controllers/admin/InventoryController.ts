@@ -43,6 +43,16 @@ class InventoryController {
     }
   }
 
+  /** Removes an inventory batch and reverses its effect on product stock and cost. */
+  async remove(req: AdminRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await InventoryService.deleteBatch(req.params.id);
+      res.json({ success: true, message: 'Batch deleted' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async create(req: AdminRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { error, value } = validateInventoryBatchCreate(req.body);

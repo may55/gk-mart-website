@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { adminFetch, adminUpload } from "../../../admin/lib/admin-api";
+import { resizeImageToMaxSize } from "../../../lib/image-processing";
 import { X, Upload, Loader2, Plus } from "lucide-react";
 
 interface CategoryOption {
@@ -103,7 +104,7 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
       )
     : [];
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? []);
     const currentImages = item?.images.length ?? 0;
     const newTotal = currentImages + files.length + selected.length;
@@ -112,13 +113,13 @@ export function ProductForm({ product: item, onClose, onSaved }: Props) {
       setError(`Cannot add ${selected.length} image(s): max 5 total`);
       return;
     }
-    const oversized = selected.filter((f) => f.size > 150 * 1024);
-    if (oversized.length > 0) {
-      setError(`Some files exceed 150KB: ${oversized.map((f) => f.name).join(", ")}`);
-      return;
+    try {
+      const resized = await Promise.all(selected.map((file) => resizeImageToMaxSize(file)));
+      setFiles((prev) => [...prev, ...resized]);
+      setError(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Could not process image");
     }
-    setFiles((prev) => [...prev, ...selected]);
-    setError(null);
   };
 
   const removeFile = (idx: number) => setFiles((prev) => prev.filter((_, i) => i !== idx));

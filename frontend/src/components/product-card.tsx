@@ -44,7 +44,7 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
         <div className="mt-3 flex min-w-0 flex-col gap-0.5">
           <h3 className="truncate text-sm font-semibold text-foreground">{product.name}</h3>
-          <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
+          <p className="text-xs text-muted-foreground">{product.sku}</p>
         </div>
         <div className="mt-1.5 flex items-baseline gap-1.5">
           <span className="text-base font-bold text-foreground">

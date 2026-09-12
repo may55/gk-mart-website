@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Image, Loader2, Pencil, Upload } from "lucide-react";
 import type { Category } from "../../../lib/types";
 import { adminFetch, adminUpload } from "../../../admin/lib/admin-api";
+import { resizeImageToMaxSize } from "../../../lib/image-processing";
 
 export const Route = createFileRoute("/admin/_admin/categories")({
   component: CategoriesAdminPage,
@@ -78,8 +79,9 @@ function CategoriesAdminPage() {
     setUploadingId(category._id);
     setError(null);
     try {
+      const resizedFile = await resizeImageToMaxSize(file);
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("image", resizedFile);
       await adminUpload(`/categories/${category._id}/image`, formData);
       await loadCategories();
     } catch (err: unknown) {

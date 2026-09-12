@@ -1,6 +1,7 @@
 import {
   calculateDiscountPercent,
   calculateLineTotal,
+  calculateRemovedBatchAverageCost,
   calculateReplacedBatchAverageCost,
   calculateWeightedAverageCost,
 } from '../../src/utils/pricing';
@@ -13,6 +14,11 @@ describe('pricing utilities', () => {
 
   it('recalculates cost when an existing batch is replaced', () => {
     expect(calculateReplacedBatchAverageCost(15, 15, 19.33, 90, 60)).toBe(17.33);
+  });
+
+  it('recalculates cost when an inventory batch is removed', () => {
+    expect(calculateRemovedBatchAverageCost(15, 19.33, 5, 90)).toBe(19.99);
+    expect(calculateRemovedBatchAverageCost(5, 20, 5, 100)).toBe(0);
   });
 
   it('returns zero weighted cost when there are no units', () => {

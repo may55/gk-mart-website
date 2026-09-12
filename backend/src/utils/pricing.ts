@@ -24,6 +24,20 @@ export function calculateReplacedBatchAverageCost(
   ) / 100;
 }
 
+/** Recalculates average cost after removing an inventory batch from stock. */
+export function calculateRemovedBatchAverageCost(
+  currentTotalUnits: number,
+  currentAverageCost: number,
+  removedUnits: number,
+  removedTotalCost: number,
+): number {
+  const remainingUnits = currentTotalUnits - removedUnits;
+  if (remainingUnits <= 0) return 0;
+  return Math.round(
+    ((currentAverageCost * currentTotalUnits - removedTotalCost) / remainingUnits) * 100,
+  ) / 100;
+}
+
 /** Calculates the whole-number discount percentage shown to customers. */
 export function calculateDiscountPercent(sellingPrice: number, marketPrice: number): number {
   if (marketPrice <= 0 || sellingPrice >= marketPrice) return 0;

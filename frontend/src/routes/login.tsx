@@ -5,6 +5,9 @@ import { useAuthApi } from "@/lib/auth-api";
 import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : "",
+  }),
   head: () => ({
     meta: [
       { title: "Login — GK Mart" },
@@ -16,6 +19,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const { setHasSkipped } = useAuth();
   const { login, isLoading, error, setError } = useAuthApi();
   const [showPassword, setShowPassword] = useState(false);
@@ -59,7 +63,7 @@ function LoginPage() {
       return;
     }
 
-    const success = await login(formData);
+    const success = await login(formData, redirect || undefined);
     if (success) {
       // Navigation happens in the hook
     }
@@ -99,7 +103,10 @@ function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email/Phone Input */}
             <div>
-              <label htmlFor="identifier" className="block text-sm font-medium text-foreground mb-2">
+              <label
+                htmlFor="identifier"
+                className="block text-sm font-medium text-foreground mb-2"
+              >
                 Email or Phone Number
               </label>
               <input
@@ -117,7 +124,9 @@ function LoginPage() {
                 disabled={isLoading}
               />
               {fieldErrors.identifier && (
-                <p className="mt-1 text-xs text-destructive font-medium">{fieldErrors.identifier}</p>
+                <p className="mt-1 text-xs text-destructive font-medium">
+                  {fieldErrors.identifier}
+                </p>
               )}
             </div>
 
@@ -147,11 +156,7 @@ function LoginPage() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   tabIndex={-1}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {fieldErrors.password && (

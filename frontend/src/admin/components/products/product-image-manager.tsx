@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Loader2, Upload, X, ImageOff } from "lucide-react";
 import { adminFetch, adminUpload } from "../../lib/admin-api";
+import { resizeImageToMaxSize } from "../../../lib/image-processing";
 
 const MAX_IMAGES = 5;
 const MAX_SIZE_BYTES = 150 * 1024;
@@ -23,11 +24,6 @@ export function ProductImageManager({ productEnum, images, onChanged }: Props) {
   const upload = async (files: File[]) => {
     if (!files.length) return;
 
-    const oversized = files.filter((f) => f.size > MAX_SIZE_BYTES);
-    if (oversized.length) {
-      setError(`Files exceed 150KB: ${oversized.map((f) => f.name).join(", ")}`);
-      return;
-    }
     if (images.length + files.length > MAX_IMAGES) {
       setError(`Only ${MAX_IMAGES - images.length} slot(s) remaining`);
       return;
@@ -36,9 +32,14 @@ export function ProductImageManager({ productEnum, images, onChanged }: Props) {
     setError(null);
     setUploading(true);
     try {
+      const resizedFiles = await Promise.all(
+        files.map((file) => resizeImageToMaxSize(file, MAX_SIZE_BYTES)),
+      );
       const formData = new FormData();
-      files.forEach((f) => formData.append("images", f));
-      const res = await adminUpload(`/products/${productEnum}/images`, formData) as { data: { images: string[] } };
+      resizedFiles.forEach((f) => formData.append("images", f));
+      const res = (await adminUpload(`/products/${productEnum}/images`, formData)) as {
+        data: { images: string[] };
+      };
       onChanged(res.data.images);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -54,7 +55,7 @@ export function ProductImageManager({ productEnum, images, onChanged }: Props) {
     try {
       const res = await adminFetch<{ data: { images: string[] } }>(
         `/products/${productEnum}/images/${index}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       onChanged(res.data.images);
     } catch (err: unknown) {
@@ -67,9 +68,7 @@ export function ProductImageManager({ productEnum, images, onChanged }: Props) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files).filter((f) =>
-      f.type.startsWith("image/")
-    );
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
     upload(files);
   };
 
@@ -77,7 +76,9 @@ export function ProductImageManager({ productEnum, images, onChanged }: Props) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-foreground">Images</h2>
-        <span className="text-xs text-muted-foreground">{images.length}/{MAX_IMAGES}</span>
+        <span className="text-xs text-muted-foreground">
+          {images.length}/{MAX_IMAGES}
+        </span>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -94,9 +95,11 @@ export function ProductImageManager({ productEnum, images, onChanged }: Props) {
               disabled={deletingIndex !== null || uploading}
               className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white shadow disabled:opacity-60"
             >
-              {deletingIndex === i
-                ? <Loader2 className="h-3 w-3 animate-spin" />
-                : <X className="h-3 w-3" />}
+              {deletingIndex === i ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <X className="h-3 w-3" />
+              )}
             </button>
           </div>
         ))}
@@ -115,7 +118,10 @@ export function ProductImageManager({ productEnum, images, onChanged }: Props) {
 
         {canAdd && !uploading && (
           <div
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             onClick={() => inputRef.current?.click()}

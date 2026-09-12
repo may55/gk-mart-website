@@ -137,7 +137,7 @@ function ProductsPage() {
                               />
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
+                          <p className="text-xs text-muted-foreground">{product.sku}</p>
                         </div>
                       </div>
                     </td>

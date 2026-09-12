@@ -15,5 +15,6 @@ inventoryRouter.use(adminAuthMiddleware);
 inventoryRouter.get('/', (req, res, next) => InventoryController.getAll(req, res, next));
 inventoryRouter.post('/', upload.single('billImage'), (req, res, next) => InventoryController.create(req, res, next));
 inventoryRouter.put('/:id', (req, res, next) => InventoryController.update(req, res, next));
+inventoryRouter.delete('/:id', (req, res, next) => InventoryController.remove(req, res, next));
 
 export default inventoryRouter;

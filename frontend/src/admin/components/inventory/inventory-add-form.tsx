@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { adminFetch, adminUpload } from "../../lib/admin-api";
 import { Loader2, CheckCircle2, ChevronDown, EyeOff } from "lucide-react";
 import { calculateDiscountPercent } from "../../../lib/pricing";
+import { resizeImageToMaxSize } from "../../../lib/image-processing";
 
 interface Product {
   _id: string;
@@ -29,6 +30,8 @@ const EMPTY_NEW = {
 
 export function InventoryAddForm({ onAdded }: Props) {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selected, setSelected] = useState<Product | null>(null);
@@ -61,9 +64,13 @@ export function InventoryAddForm({ onAdded }: Props) {
   }, []);
 
   useEffect(() => {
+    setProductsLoading(true);
     adminFetch<{ data: Product[] }>("/products")
       .then((res) => setAllProducts(res.data))
-      .catch(() => {});
+      .catch((err: unknown) => {
+        setProductsError(err instanceof Error ? err.message : "Could not load products");
+      })
+      .finally(() => setProductsLoading(false));
   }, []);
 
   const suggestions =
@@ -194,7 +201,9 @@ export function InventoryAddForm({ onAdded }: Props) {
       formData.append("numberOfUnits", String(parseInt(units)));
       formData.append("totalCostPrice", String(parseFloat(totalCost)));
       formData.append("vendorName", vendor.trim());
-      if (billImage) formData.append("billImage", billImage);
+      if (billImage) {
+        formData.append("billImage", await resizeImageToMaxSize(billImage));
+      }
       await adminUpload("/inventory", formData);
 
       setSuccess(true);
@@ -239,23 +248,33 @@ export function InventoryAddForm({ onAdded }: Props) {
           <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           {showDropdown && query.trim().length > 0 && (
             <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-card shadow-md">
-              {suggestions.map((p) => (
-                <button
-                  key={p._id}
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => selectProduct(p)}
-                  className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-accent"
-                >
-                  <span className="font-medium text-foreground">{p.name}</span>
-                  <span className="ml-2 shrink-0 text-xs text-muted-foreground">
-                    {p.sku} · ₹{p.marketPrice} · {p.unitsInStock} in stock
-                  </span>
-                </button>
-              ))}
+              {productsLoading && (
+                <p className="px-3 py-2.5 text-sm text-muted-foreground">Loading products…</p>
+              )}
+              {!productsLoading && productsError && (
+                <p className="px-3 py-2.5 text-sm text-destructive">{productsError}</p>
+              )}
+              {!productsLoading && !productsError && suggestions.length === 0 && (
+                <p className="px-3 py-2.5 text-sm text-muted-foreground">No matching products</p>
+              )}
+              {!productsLoading &&
+                suggestions.map((p) => (
+                  <button
+                    key={p._id}
+                    type="button"
+                    onPointerDown={(e) => e.preventDefault()}
+                    onClick={() => selectProduct(p)}
+                    className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-accent"
+                  >
+                    <span className="font-medium text-foreground">{p.name}</span>
+                    <span className="ml-2 shrink-0 text-xs text-muted-foreground">
+                      {p.sku} · ₹{p.marketPrice} · {p.unitsInStock} in stock
+                    </span>
+                  </button>
+                ))}
               <button
                 type="button"
-                onMouseDown={(e) => e.preventDefault()}
+                onPointerDown={(e) => e.preventDefault()}
                 onClick={markAsNew}
                 className="flex w-full items-center gap-2 border-t border-border px-3 py-2.5 text-left text-sm text-primary hover:bg-accent"
               >

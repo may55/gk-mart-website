@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { adminFetch } from "../../lib/admin-api";
-import { Loader2, Pencil, X, Check } from "lucide-react";
+import { Loader2, Pencil, Trash2, X, Check } from "lucide-react";
 
 export interface InventoryBatch {
   _id: string;
@@ -28,6 +28,7 @@ interface Props {
 export function InventoryBatchTable({ batches, showProduct = false, onUpdated }: Props) {
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const startEdit = (b: InventoryBatch) => {
@@ -70,6 +71,27 @@ export function InventoryBatchTable({ batches, showProduct = false, onUpdated }:
       setError(err instanceof Error ? err.message : "Failed to update batch");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteBatch = async (b: InventoryBatch) => {
+    if (
+      !window.confirm(
+        `Delete inventory batch #${b.inventoryBatch}? This will reverse its stock and cost.`,
+      )
+    ) {
+      return;
+    }
+    setDeleting(b._id);
+    setError(null);
+    try {
+      await adminFetch(`/inventory/${b._id}`, { method: "DELETE" });
+      if (editing?.id === b._id) setEditing(null);
+      onUpdated();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete batch");
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -210,15 +232,30 @@ export function InventoryBatchTable({ batches, showProduct = false, onUpdated }:
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => startEdit(b)}
-                      disabled={!!editing}
-                      className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-accent disabled:opacity-40"
-                    >
-                      <Pencil className="h-3 w-3" />
-                      Edit
-                    </button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(b)}
+                        disabled={!!editing || deleting !== null}
+                        className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-accent disabled:opacity-40"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteBatch(b)}
+                        disabled={!!editing || deleting !== null}
+                        className="flex items-center gap-1 rounded-md border border-destructive/30 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                      >
+                        {deleting === b._id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>

@@ -16,10 +16,12 @@ function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [imgIndex, setImgIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
   const { items, add, setQty, remove } = useCart();
 
   useEffect(() => {
     setIsLoading(true);
+    setImgIndex(0);
     apiFetch<{ data: Product }>(`/products/${productEnum}`)
       .then((res) => setProduct(res.data))
       .catch(() => setProduct(null))
@@ -73,7 +75,25 @@ function ProductDetailPage() {
         </button>
 
         {/* Image carousel */}
-        <div className="relative aspect-square w-full overflow-hidden bg-muted">
+        <div
+          className="relative aspect-square w-full touch-pan-y overflow-hidden bg-muted"
+          onTouchStart={(event) => {
+            touchStartX.current = event.touches[0]?.clientX ?? null;
+          }}
+          onTouchEnd={(event) => {
+            const startX = touchStartX.current;
+            touchStartX.current = null;
+            if (startX === null || images.length < 2) return;
+
+            const endX = event.changedTouches[0]?.clientX;
+            if (endX === undefined) return;
+            const distance = endX - startX;
+            if (Math.abs(distance) < 40) return;
+            setImgIndex((current) =>
+              distance < 0 ? Math.min(images.length - 1, current + 1) : Math.max(0, current - 1),
+            );
+          }}
+        >
           {images[imgIndex] ? (
             <img src={images[imgIndex]} alt={product.name} className="h-full w-full object-cover" />
           ) : (
@@ -129,7 +149,7 @@ function ProductDetailPage() {
           <h1 className="mt-2 text-xl font-extrabold leading-tight tracking-tight">
             {product.name}
           </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">SKU: {product.sku}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{product.sku}</p>
 
           {/* Price */}
           <div className="mt-4 flex items-end gap-3">
@@ -158,7 +178,7 @@ function ProductDetailPage() {
 
           {/* Stock */}
           <p className="text-xs text-muted-foreground">
-            {product.unitsInStock > 0 ? `${product.unitsInStock} units in stock` : "Out of stock"}
+            {product.unitsInStock > 0 ? "In stock" : "Out of stock"}
           </p>
         </div>
 

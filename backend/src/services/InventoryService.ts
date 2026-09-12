@@ -1,7 +1,11 @@
 import InventoryBatchRepository from '../repositories/InventoryBatchRepository';
 import ProductRepository from '../repositories/ProductRepository';
 import { IInventoryBatch } from '../models/InventoryBatch';
-import { calculateReplacedBatchAverageCost, calculateWeightedAverageCost } from '../utils/pricing';
+import {
+  calculateRemovedBatchAverageCost,
+  calculateReplacedBatchAverageCost,
+  calculateWeightedAverageCost,
+} from '../utils/pricing';
 
 interface CreateBatchData {
   itemEnum: string;
@@ -61,6 +65,37 @@ class InventoryService {
     });
 
     return updated;
+  }
+
+  /** Deletes a batch and reverses its units and cost from the related product. */
+  async deleteBatch(batchId: string): Promise<void> {
+    const batch = await InventoryBatchRepository.findById(batchId);
+    if (!batch) throw Object.assign(new Error('Batch not found'), { statusCode: 404 });
+
+    const product = await ProductRepository.findByEnum(batch.itemEnum);
+    if (!product) throw Object.assign(new Error('Product not found'), { statusCode: 404 });
+    if (product.unitsInStock < batch.numberOfUnits) {
+      throw Object.assign(
+        new Error('Batch cannot be deleted because some of its stock has already been sold'),
+        { statusCode: 409 },
+      );
+    }
+
+    const remainingUnits = product.unitsInStock - batch.numberOfUnits;
+    const remainingAverageCost = calculateRemovedBatchAverageCost(
+      product.unitsInStock,
+      product.averageCostPrice,
+      batch.numberOfUnits,
+      batch.totalCostPrice,
+    );
+
+    const deleted = await InventoryBatchRepository.deleteById(batchId);
+    if (!deleted) throw Object.assign(new Error('Batch not found'), { statusCode: 404 });
+
+    await ProductRepository.updateByEnum(batch.itemEnum, {
+      unitsInStock: remainingUnits,
+      averageCostPrice: remainingAverageCost,
+    });
   }
 
   /** Records incoming stock, updates aggregate stock/cost, and stores its vendor/bill metadata. */

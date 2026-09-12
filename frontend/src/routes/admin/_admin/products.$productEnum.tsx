@@ -105,7 +105,7 @@ function ProductDetailPage() {
         <div className="h-4 w-px bg-border" />
         <div>
           <h1 className="text-xl font-semibold text-foreground">{product.name}</h1>
-          <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+          <p className="text-sm text-muted-foreground">{product.sku}</p>
         </div>
         {!product.isVisible && (
           <span className="ml-auto rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
@@ -153,7 +153,7 @@ function ProductDetailPage() {
       {/* Barcode */}
       {product.barcode && (
         <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm">
-          <span className="font-medium text-foreground">Barcode / SKU:</span>
+          <span className="font-medium text-foreground">Barcode:</span>
           <span className="font-mono text-muted-foreground">{product.barcode}</span>
         </div>
       )}

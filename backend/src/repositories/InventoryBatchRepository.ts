@@ -33,6 +33,10 @@ class InventoryBatchRepository {
   ): Promise<IInventoryBatch | null> {
     return await InventoryBatch.findByIdAndUpdate(id, { $set: data }, { new: true });
   }
+
+  async deleteById(id: string): Promise<IInventoryBatch | null> {
+    return await InventoryBatch.findByIdAndDelete(id);
+  }
 }
 
 export default new InventoryBatchRepository();

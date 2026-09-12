@@ -75,7 +75,7 @@ export function useAuthApi() {
     }
   };
 
-  const login_api = async (formData: LoginFormData) => {
+  const login_api = async (formData: LoginFormData, redirectTo = "/") => {
     setIsLoading(true);
     setError(null);
     try {
@@ -98,8 +98,16 @@ export function useAuthApi() {
       // Save to auth context
       if (data.data) {
         login(data.data.user, data.data.token);
-        // Navigate to home after successful login
-        setTimeout(() => navigate({ to: "/" }), 500);
+        // Return users to the page that required authentication when requested.
+        setTimeout(() => {
+          if (redirectTo.startsWith("/cart")) {
+            navigate(
+              redirectTo.includes("checkout=1")
+                ? { to: "/cart", search: { checkout: "1" } as never }
+                : { to: "/cart" },
+            );
+          } else navigate({ to: "/" });
+        }, 500);
         return true;
       }
     } catch (err) {
