@@ -27,6 +27,11 @@ const EMPTY_FORM: Address = {
   phone: "",
 };
 
+const getUnitDetails = (address: Address) =>
+  address.block || address.floor
+    ? `${address.flatNumber}, Block ${address.block}, Floor ${address.floor}`
+    : address.flatNumber || address.line1;
+
 // ─── AddressManager ───────────────────────────────────────────────────────────
 // Handles the full list→form→save flow. Used from both Cart and Profile.
 export function AddressManager({
@@ -60,7 +65,7 @@ export function AddressManager({
           const method = editIndex !== null ? "PUT" : "POST";
           const payload = {
             ...data,
-            line1: `${data.flatNumber}, Block ${data.block}, Floor ${data.floor}`,
+            line1: data.flatNumber,
             line2: data.societyAddress,
             city: "Indore",
             state: "Madhya Pradesh",
@@ -151,11 +156,7 @@ export function AddressManager({
                             {addr.label}
                           </p>
                         )}
-                        <p className="font-semibold">
-                          {addr.flatNumber
-                            ? `${addr.flatNumber}, Block ${addr.block}, Floor ${addr.floor}`
-                            : addr.line1}
-                        </p>
+                        <p className="font-semibold">{getUnitDetails(addr)}</p>
                         {addr.society && <p className="text-muted-foreground">{addr.society}</p>}
                         <p className="text-muted-foreground">
                           {addr.city}, {addr.state} – {addr.pincode}
@@ -213,7 +214,11 @@ export function AddressForm({
   onBack: () => void;
   onSave: (data: Address) => Promise<void>;
 }) {
-  const [form, setForm] = useState<Address>(initialValue ?? EMPTY_FORM);
+  const [form, setForm] = useState<Address>(() =>
+    initialValue
+      ? { ...initialValue, flatNumber: getUnitDetails(initialValue), block: "", floor: "" }
+      : EMPTY_FORM,
+  );
   const [errors, setErrors] = useState<Partial<Record<keyof Address, string>>>({});
   const [saving, setSaving] = useState(false);
 
@@ -223,9 +228,7 @@ export function AddressForm({
   const validate = (): boolean => {
     const e: typeof errors = {};
     if (!form.society) e.society = "Select a society";
-    if (!form.flatNumber.trim()) e.flatNumber = "Flat number is required";
-    if (!form.block.trim()) e.block = "Block is required";
-    if (!form.floor.trim()) e.floor = "Floor is required";
+    if (!form.flatNumber.trim()) e.flatNumber = "Flat, block and floor details are required";
     if (!/^\d{6}$/.test(form.pincode.trim())) e.pincode = "Pincode must be 6 digits";
     if (!form.city.trim()) e.city = "City is required";
     if (!form.state.trim()) e.state = "State is required";
@@ -300,46 +303,12 @@ export function AddressForm({
                 <p className="text-xs text-muted-foreground">{form.societyAddress}</p>
               )}
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <Field
-                label="Flat no. *"
-                value={form.flatNumber}
-                onChange={set("flatNumber")}
-                placeholder="402"
-                error={errors.flatNumber}
-              />
-              <Field
-                label="Block *"
-                value={form.block}
-                onChange={set("block")}
-                placeholder="A"
-                error={errors.block}
-              />
-              <Field
-                label="Floor *"
-                value={form.floor}
-                onChange={set("floor")}
-                placeholder="4"
-                error={errors.floor}
-              />
-            </div>
             <Field
-              label="Address line 1 *"
-              value={
-                form.society
-                  ? `${form.flatNumber}, Block ${form.block}, Floor ${form.floor}`
-                  : form.line1
-              }
-              onChange={() => undefined}
-              placeholder="Generated from flat, block and floor"
-              readOnly
-            />
-            <Field
-              label="Address line 2"
-              value={form.societyAddress}
-              onChange={() => undefined}
-              placeholder="Society address"
-              readOnly
+              label="Flat / block / floor *"
+              value={form.flatNumber}
+              onChange={set("flatNumber")}
+              placeholder="e.g. Flat 402, Block A, Floor 4"
+              error={errors.flatNumber}
             />
             <Field
               label="Pincode *"

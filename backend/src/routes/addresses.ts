@@ -13,8 +13,10 @@ const addressSchema = Joi.object({
   society: Joi.string().trim().required(),
   societyAddress: Joi.string().trim().required(),
   flatNumber: Joi.string().trim().required(),
-  block: Joi.string().trim().required(),
-  floor: Joi.string().trim().required(),
+  // New addresses use one combined flat/block/floor value in flatNumber.
+  // Keep these fields optional so older saved-address records remain compatible.
+  block: Joi.string().trim().allow('').default(''),
+  floor: Joi.string().trim().allow('').default(''),
   line1: Joi.string().trim().min(3).required().messages({ 'string.empty': 'Address line 1 is required' }),
   line2: Joi.string().trim().allow('').default(''),
   pincode: Joi.string().trim().pattern(/^\d{6}$/).required().messages({ 'string.pattern.base': 'Pincode must be 6 digits' }),
